@@ -4,26 +4,29 @@ Upload page: lets the user upload files for processing.
 
 import streamlit as st
 
-st.title("📤 Upload")
+from backend.localization.translator import translate
 
-st.write("Upload one or more files to get started.")
+language = st.session_state.get("language", "English")
+
+st.title(translate("upload_title", language))
+st.write(translate("upload_body", language))
 
 uploaded_files = st.file_uploader(
-    "Choose file(s)",
+    translate("choose_files", language),
     type=["pdf", "png", "jpg", "jpeg"],
     accept_multiple_files=True,
 )
 
 if uploaded_files:
     st.session_state["uploaded_files"] = uploaded_files
-    st.success(f"Uploaded {len(uploaded_files)} file(s) successfully.")
+    st.success(translate("uploaded", language, count=len(uploaded_files)))
 
     for file in uploaded_files:
         with st.expander(file.name):
-            st.write(f"**Type:** {file.type}")
-            st.write(f"**Size:** {file.size} bytes")
+            st.write(f"**{translate('file_type', language)}:** {file.type}")
+            st.write(f"**{translate('file_size', language)}:** {file.size} bytes")
 
-    if st.button("Continue to Processing →"):
+    if st.button(translate("continue_processing", language)):
         st.switch_page("pages/2_processing.py")
 else:
-    st.info("No files uploaded yet.")
+    st.info(translate("no_files", language))

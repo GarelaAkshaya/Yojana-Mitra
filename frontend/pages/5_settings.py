@@ -1,24 +1,19 @@
 """
-Settings page: app preferences (language, theme, voice input, etc.)
+Settings page: app language preference.
 """
 
 import streamlit as st
 
-st.title("⚙️ Settings")
+from backend.localization.translator import translate
+from frontend.components.language_toggle import language_toggle
 
-st.subheader("Language")
-language = st.selectbox("Choose your preferred language", ["English", "Hindi", "Telugu"])
-st.session_state["language"] = language
+language = st.session_state.get("language", "English")
 
-st.subheader("Theme")
-theme = st.radio("Choose theme", ["Light", "Dark"], horizontal=True)
-st.session_state["theme"] = theme
+st.title(translate("settings_title", language))
 
-st.subheader("Voice Input")
-voice_enabled = st.toggle("Enable voice input", value=False)
-st.session_state["voice_enabled"] = voice_enabled
+language_toggle("settings_language")
 
 st.divider()
 
-if st.button("Save Settings"):
-    st.success("Settings saved successfully!")
+if st.button(translate("save_settings", st.session_state.get("language", "English"))):
+    st.success(translate("settings_saved", st.session_state.get("language", "English")))

@@ -4,18 +4,22 @@ History page: view past sessions / chat history.
 
 import streamlit as st
 
-st.title("🕘 History")
+from backend.localization.translator import translate
+
+language = st.session_state.get("language", "English")
+
+st.title(translate("history_title", language))
 
 messages = st.session_state.get("messages", [])
 
 if not messages:
-    st.info("No history yet. Start a chat to see your history here.")
+    st.info(translate("no_history", language))
 else:
-    for i, message in enumerate(messages):
-        role = "🧑 You" if message["role"] == "user" else "🤖 Assistant"
+    for message in messages:
+        role = translate("you", language) if message["role"] == "user" else translate("assistant", language)
         st.markdown(f"**{role}:** {message['content']}")
         st.divider()
 
-    if st.button("Clear History"):
+    if st.button(translate("clear_history", language)):
         st.session_state["messages"] = []
         st.rerun()
