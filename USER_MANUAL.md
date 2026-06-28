@@ -25,7 +25,8 @@ git clone https://code.swecha.org/<username>/yojana-mitra.git
 Install dependencies.
 
 ```bash
-pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 ---
@@ -33,7 +34,7 @@ pip install -r requirements.txt
 ## Launch Application
 
 ```bash
-streamlit run app.py
+.venv/bin/streamlit run frontend/app.py
 ```
 
 ---
