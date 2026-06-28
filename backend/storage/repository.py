@@ -190,14 +190,25 @@ class Repository:
                 ),
             )
 
-    def get_cached_response(self, document_id: int | None, question: str) -> dict[str, Any] | None:
-        key = self.cache_key(document_id, question)
+    def get_cached_response(
+        self,
+        document_id: int | None,
+        question: str,
+        language: str = "en",
+    ) -> dict[str, Any] | None:
+        key = self.cache_key(document_id, question, language)
         with self.db.connect() as conn:
             row = conn.execute("SELECT response_json FROM response_cache WHERE cache_key = ?", (key,)).fetchone()
         return json.loads(row["response_json"]) if row else None
 
-    def set_cached_response(self, document_id: int | None, question: str, response: dict[str, Any]) -> None:
-        key = self.cache_key(document_id, question)
+    def set_cached_response(
+        self,
+        document_id: int | None,
+        question: str,
+        response: dict[str, Any],
+        language: str = "en",
+    ) -> None:
+        key = self.cache_key(document_id, question, language)
         with self.db.connect() as conn:
             conn.execute(
                 """
@@ -208,6 +219,6 @@ class Repository:
             )
 
     @staticmethod
-    def cache_key(document_id: int | None, question: str) -> str:
+    def cache_key(document_id: int | None, question: str, language: str = "en") -> str:
         normalized = " ".join(question.lower().split())
-        return sha256(f"{document_id or 'all'}:{normalized}".encode("utf-8")).hexdigest()
+        return sha256(f"{document_id or 'all'}:{language}:{normalized}".encode("utf-8")).hexdigest()
