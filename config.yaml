@@ -1,0 +1,29 @@
+app:
+  name: Yojana Mitra
+  default_language: en
+  supported_languages: [en, hi, te]
+
+paths:
+  data_dir: data
+  upload_dir: data/uploads
+  processed_dir: data/processed
+  cache_dir: data/cache
+  db_path: data/yojana_mitra.sqlite3
+  faiss_dir: data/faiss_store
+  llm_model_path: models/llm/model.gguf
+  embedding_model_path: models/embeddings/bge-small-en-v1.5
+  ocr_model_dir: models/ocr
+  whisper_model_path: models/whisper/ggml-small.bin
+
+retrieval:
+  top_k: 5
+  min_confidence: 0.20
+
+chunking:
+  max_chars: 900
+  overlap_chars: 120
+
+llm:
+  max_tokens: 256
+  temperature: 0.1
+  context_window: 4096
