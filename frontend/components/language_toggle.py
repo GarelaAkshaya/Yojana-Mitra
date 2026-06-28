@@ -1,27 +1,22 @@
 """
-Reusable component: language toggle widget.
+Reusable component: language selector widget.
 """
 
 import streamlit as st
 
-SUPPORTED_LANGUAGES = ["English", "Hindi", "Telugu"]
+from backend.localization.translator import LANGUAGE_NAMES, language_name, translate
 
 
 def language_toggle(key: str = "language_toggle") -> str:
     """
-    Render a language selector and return the selected language.
-
-    Args:
-        key: Unique Streamlit widget key (use different keys if rendered
-             more than once on the same page).
-
-    Returns:
-        The selected language as a string.
+    Render a language selector and return the selected language name.
     """
+    supported_languages = list(LANGUAGE_NAMES.keys())
+    current_language = language_name(st.session_state.get("language", "English"))
     selected = st.selectbox(
-        "🌐 Language",
-        SUPPORTED_LANGUAGES,
-        index=SUPPORTED_LANGUAGES.index(st.session_state.get("language", "English")),
+        translate("language", current_language),
+        supported_languages,
+        index=supported_languages.index(current_language),
         key=key,
     )
     st.session_state["language"] = selected
