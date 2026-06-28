@@ -2,52 +2,22 @@
 Chat page: conversational interface with the assistant.
 """
 
-from pathlib import Path
-
 import streamlit as st
 
-from backend.core.config import get_settings
-from backend.localization.translator import language_code, translate
-from backend.pipeline.qa_pipeline import run_qa_pipeline
-from backend.speech.whisper_engine import WhisperEngine
+from backend.localization.translator import translate
 from backend.storage.repository import Repository
+from frontend.services.chat_flow import answer_prompt, transcribe_audio
 
 
-def transcribe_audio(audio_value, language: str) -> str:
-    settings = get_settings()
-    voice_dir = settings.paths.cache_dir / "voice_inputs"
-    voice_dir.mkdir(parents=True, exist_ok=True)
-    suffix = Path(getattr(audio_value, "name", "voice.wav")).suffix or ".wav"
-    audio_path = voice_dir / f"chat_voice_{len(st.session_state['messages'])}{suffix}"
-    audio_path.write_bytes(audio_value.getvalue())
-    return WhisperEngine().transcribe(audio_path, language=language_code(language))
-
-
-def answer_prompt(prompt: str, selected_document_id: int | None, language: str) -> str:
-    if selected_document_id is None:
-        return translate("need_document", language)
-
-    with st.spinner(translate("searching", language)):
-        try:
-            result = run_qa_pipeline(prompt, document_id=selected_document_id, language=language_code(language))
-            response = result.answer or translate("not_found", language)
-            if result.citations:
-                sources = ", ".join(
-                    f"{citation.get('document_name', 'document')} page {citation.get('page_number', 1)}"
-                    for citation in result.citations[:3]
-                )
-                response = f"{response}\n\n{translate('sources', language)}: {sources}"
-            return response
-        except Exception as exc:
-            return f"{translate('processing_failed', language)}: {exc}"
-
-
-language = st.session_state.get("language", "English")
+language = st.session_state.get("language", "en")
 
 st.title(translate("chat_title", language))
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
+if st.session_state.pop("clear_chat_text_input", False):
+    st.session_state["chat_text_input"] = ""
+st.session_state.setdefault("chat_text_input", "")
 
 processed_documents = st.session_state.get("processed_documents", [])
 document_options = {
@@ -72,39 +42,50 @@ for message in st.session_state["messages"]:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-text_column, voice_column, send_column = st.columns([5, 3, 1])
-with text_column:
-    typed_prompt = st.text_input(
-        translate("type_message", language),
-        key="chat_text_input",
-        label_visibility="collapsed",
-        placeholder=translate("type_message", language),
-    )
-with voice_column:
+question_container = st.container()
+voice_container = st.container()
+
+with voice_container:
     try:
         audio_value = st.audio_input(
             translate("voice_message", language),
             key="chat_voice_input",
-            label_visibility="collapsed",
         )
     except AttributeError:
         audio_value = None
         st.warning(translate("voice_unavailable", language))
-with send_column:
-    send_clicked = st.button(translate("send", language), use_container_width=True)
 
 if audio_value is not None:
-    st.caption(translate("recorded", language))
-
-if send_clicked:
-    prompt = typed_prompt.strip()
-
-    if not prompt and audio_value is not None:
+    audio_size = getattr(audio_value, "size", None)
+    if audio_size is None:
+        audio_size = len(audio_value.getvalue())
+    audio_id = f"{getattr(audio_value, 'file_id', '')}:{getattr(audio_value, 'name', '')}:{audio_size}"
+    if st.session_state.get("chat_transcribed_audio_id") != audio_id:
+        st.caption(translate("recorded", language))
         try:
-            prompt = transcribe_audio(audio_value, language).strip()
+            st.session_state["chat_text_input"] = transcribe_audio(audio_value, language)
+            st.session_state["chat_transcribed_audio_id"] = audio_id
+            st.session_state["chat_auto_submit_voice"] = True
+            st.success(translate("transcribed", language))
+            st.rerun()
         except Exception as exc:
             st.error(f"{translate('voice_failed', language)}: {exc}")
-            st.stop()
+
+with question_container:
+    text_column, send_column = st.columns([6, 1])
+    with text_column:
+        st.text_input(
+            translate("type_message", language),
+            key="chat_text_input",
+            label_visibility="collapsed",
+            placeholder=translate("type_message", language),
+        )
+    with send_column:
+        send_clicked = st.button(translate("send", language), use_container_width=True)
+
+send_requested = send_clicked or st.session_state.pop("chat_auto_submit_voice", False)
+if send_requested:
+    prompt = st.session_state.get("chat_text_input", "").strip()
 
     if not prompt:
         st.warning(translate("empty_message", language))
@@ -120,4 +101,5 @@ if send_clicked:
     with st.chat_message("assistant"):
         st.markdown(response)
 
+    st.session_state["clear_chat_text_input"] = True
     st.rerun()
