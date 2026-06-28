@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://local.yojana-mitra/schemas/scheme_schema.json",
+  "title": "Yojana Mitra Scheme",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scheme_name",
+    "department",
+    "state",
+    "eligibility",
+    "benefits",
+    "documents",
+    "important_dates",
+    "application_process",
+    "contact",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0" },
+    "scheme_name": { "type": "string" },
+    "department": { "type": "string" },
+    "state": { "type": "string" },
+    "category": { "type": "string" },
+    "objective": { "type": "string" },
+    "eligibility": { "type": "array", "items": { "type": "string" } },
+    "benefits": { "type": "array", "items": { "type": "string" } },
+    "documents": { "type": "array", "items": { "type": "string" } },
+    "important_dates": { "type": "array", "items": { "type": "string" } },
+    "application_process": { "type": "array", "items": { "type": "string" } },
+    "contact": {
+      "type": "object",
+      "properties": {
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "website": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "summary": { "type": "string" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "raw": { "type": "object" }
+  },
+  "additionalProperties": false
+}
