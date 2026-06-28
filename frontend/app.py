@@ -1,13 +1,19 @@
 """
 Streamlit entrypoint for the application.
-Run with: streamlit run app.py
+Run with: streamlit run frontend/app.py
 """
+
+from pathlib import Path
 
 import streamlit as st
 
+APP_DIR = Path(__file__).resolve().parent
+LOGO_PATH = APP_DIR / "static" / "images" / "logo.png"
+CSS_PATH = APP_DIR / "static" / "css" / "theme.css"
+
 st.set_page_config(
-    page_title="My App",
-    page_icon="static/images/logo.png",
+    page_title="Yojana Mitra",
+    page_icon=str(LOGO_PATH),
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -23,9 +29,9 @@ def load_css(file_path: str) -> None:
 
 
 def main() -> None:
-    load_css("static/css/theme.css")
+    load_css(str(CSS_PATH))
 
-    st.sidebar.image("static/images/logo.png", width=120)
+    st.sidebar.image(str(LOGO_PATH), width=120)
     st.sidebar.title("Navigation")
     st.sidebar.markdown(
         """
