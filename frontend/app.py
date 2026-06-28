@@ -7,6 +7,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from backend.localization.translator import translate
+
 APP_DIR = Path(__file__).resolve().parent
 LOGO_PATH = APP_DIR / "static" / "images" / "logo.png"
 CSS_PATH = APP_DIR / "static" / "css" / "theme.css"
@@ -30,9 +32,10 @@ def load_css(file_path: str) -> None:
 
 def main() -> None:
     load_css(str(CSS_PATH))
+    language = st.session_state.get("language", "English")
 
     st.sidebar.image(str(LOGO_PATH), width=120)
-    st.sidebar.title("Navigation")
+    st.sidebar.title(translate("navigation", language))
     st.sidebar.markdown(
         """
         Use the pages in the sidebar to:
@@ -44,8 +47,8 @@ def main() -> None:
         """
     )
 
-    st.title("Welcome")
-    st.write("Select a page from the sidebar to get started.")
+    st.title(translate("welcome_title", language))
+    st.write(translate("welcome_body", language))
 
 
 if __name__ == "__main__":
