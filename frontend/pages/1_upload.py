@@ -10,6 +10,7 @@ st.write("Upload one or more files to get started.")
 
 uploaded_files = st.file_uploader(
     "Choose file(s)",
+    type=["pdf", "png", "jpg", "jpeg"],
     accept_multiple_files=True,
 )
 
