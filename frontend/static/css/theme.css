@@ -1,0 +1,55 @@
+/* ==========================================================
+   theme.css — Global theme styles for the Streamlit app
+   ========================================================== */
+
+:root {
+  --primary-color: #4F46E5;
+  --secondary-color: #6366F1;
+  --background-color: #FFFFFF;
+  --text-color: #1F2937;
+  --border-radius: 10px;
+}
+
+/* Main app background */
+.stApp {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Sidebar styling */
+section[data-testid="stSidebar"] {
+  background-color: #F9FAFB;
+  border-right: 1px solid #E5E7EB;
+}
+
+/* Buttons */
+.stButton > button {
+  border-radius: var(--border-radius);
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5em 1.2em;
+  font-weight: 600;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.stButton > button:hover {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+/* Headings */
+h1, h2, h3 {
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+/* Containers / cards */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+  border-radius: var(--border-radius);
+}
+
+/* Chat messages */
+div[data-testid="stChatMessage"] {
+  border-radius: var(--border-radius);
+}
