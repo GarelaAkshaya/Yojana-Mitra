@@ -70,7 +70,9 @@ git clone https://code.swecha.org/<username>/yojana-mitra.git
 
 cd yojana-mitra
 
-pip install -r requirements.txt
+python3 -m venv .venv
+
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 For the complete offline experience, place local model files under `models/`
@@ -83,7 +85,7 @@ bash scripts/setup_models.sh
 ## Running
 
 ```bash
-streamlit run frontend/app.py
+.venv/bin/streamlit run frontend/app.py
 ```
 
 ## Backend
@@ -100,8 +102,8 @@ Backend pipeline functions are available for the frontend at:
 ## Testing
 
 ```bash
-python3 -m pytest
-python3 scripts/benchmark_cpu.py
+.venv/bin/python -m pytest
+.venv/bin/python scripts/benchmark_cpu.py
 ```
 
 ## Team
