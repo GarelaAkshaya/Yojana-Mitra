@@ -16,6 +16,9 @@ The application allows users to upload scheme PDFs or images, ask questions usin
 - Multilingual support
 - Source citation
 - Low-resource device compatibility
+- SQLite persistence for documents, schemes, chunks, queries, and cache
+- Hybrid retrieval using SQLite FTS plus local embeddings/vector search
+- Structured JSON extraction with schema validation
 
 ## Technology Stack
 
@@ -34,13 +37,26 @@ The application allows users to upload scheme PDFs or images, ask questions usin
 ```
 yojana-mitra/
 │
-├── src/
+├── backend/                     # Backend Python package
+│   ├── core/                    # Backend config and logging
+│   ├── ingestion/               # Backend PDF/image loading and OCR
+│   ├── structuring/             # Backend chunking and scheme JSON extraction
+│   ├── embeddings/              # Backend local embeddings
+│   ├── retrieval/               # Backend hybrid search
+│   ├── llm/                     # Backend local LLM and guardrails
+│   ├── pipeline/                # Backend entry points used by frontend
+│   ├── speech/                  # Backend offline voice transcription
+│   ├── localization/            # Backend language labels
+│   └── storage/                 # Backend SQLite database layer
+├── frontend/                    # Streamlit UI
+├── schemas/
+├── scripts/
 ├── data/
-├── uploads/
-├── outputs/
 ├── docs/
 ├── tests/
 ├── models/
+├── config.yaml
+├── requirements.txt
 ├── README.md
 ├── CONTRIBUTING.md
 ├── USER_MANUAL.md
@@ -57,10 +73,35 @@ cd yojana-mitra
 pip install -r requirements.txt
 ```
 
+For the complete offline experience, place local model files under `models/`
+as described by:
+
+```bash
+bash scripts/setup_models.sh
+```
+
 ## Running
 
 ```bash
-streamlit run app.py
+streamlit run frontend/app.py
+```
+
+## Backend
+
+The backend lives in `backend/`. It handles document ingestion, OCR, structured
+scheme extraction, SQLite storage, embeddings, retrieval, local LLM answering,
+guardrails, caching, speech transcription, and localization support.
+
+Backend pipeline functions are available for the frontend at:
+
+- `backend.pipeline.ingestion_pipeline.run_ingestion_pipeline(file_path)`
+- `backend.pipeline.qa_pipeline.run_qa_pipeline(question, document_id=None)`
+
+## Testing
+
+```bash
+python3 -m pytest
+python3 scripts/benchmark_cpu.py
 ```
 
 ## Team
