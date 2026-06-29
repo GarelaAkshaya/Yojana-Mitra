@@ -12,16 +12,19 @@ from backend.retrieval.hybrid_search import rebuild_vector_index
 from backend.schemas.scheme import Scheme
 from backend.storage.repository import Repository
 from backend.structuring.chunker import chunk_text
-from backend.structuring.scheme_parser import extract_scheme_fields
-from backend.structuring.schema_validator import validate_scheme
+from backend.structuring.slm_extractor import extract_structured_scheme
 
 
 class IngestionResult(BaseModel):
     document_id: int
     status: str
     scheme: Scheme
+    pages_extracted: int
     chunks_created: int
     extraction_method: str
+    structured_extracted: bool = False
+    sqlite_saved: bool = False
+    vector_index_ready: bool = False
 
 
 def run_ingestion_pipeline(file_path: str | Path, repo: Repository | None = None) -> IngestionResult:
@@ -32,9 +35,10 @@ def run_ingestion_pipeline(file_path: str | Path, repo: Repository | None = None
         raw = _extract_text(record.file_path, record.file_type)
         language = detect_language(raw.text)
         repo.update_document_status(document_id, "processing")
+        repo.update_document_language(document_id, language)
         chunks = chunk_text(raw, document_id)
         chunk_ids = repo.insert_chunks(chunks)
-        scheme = validate_scheme(extract_scheme_fields(raw.text))
+        scheme = extract_structured_scheme(raw.text)
         repo.save_scheme(document_id, scheme)
         embed_and_store(chunks, chunk_ids, repo)
         rebuild_vector_index(repo)
@@ -43,8 +47,12 @@ def run_ingestion_pipeline(file_path: str | Path, repo: Repository | None = None
             document_id=document_id,
             status="processed",
             scheme=scheme,
+            pages_extracted=len(raw.pages) or (1 if raw.text else 0),
             chunks_created=len(chunks),
             extraction_method=raw.extraction_method,
+            structured_extracted=True,
+            sqlite_saved=True,
+            vector_index_ready=True,
         )
     except Exception as exc:
         repo.update_document_status(document_id, "failed", str(exc))
