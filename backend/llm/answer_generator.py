@@ -5,6 +5,7 @@ import re
 from backend.llm.guardrails import guard_answer
 from backend.llm.llama_cpp_engine import LlamaCppEngine
 from backend.llm.prompt_templates import qa_prompt
+from backend.retrieval.hybrid_search import detect_section_intent
 from backend.schemas.scheme import GroundedAnswer, RetrievedChunk
 
 
@@ -15,7 +16,8 @@ def generate_answer(
     language: str = "en",
 ) -> GroundedAnswer:
     engine = LlamaCppEngine()
-    answer = engine.generate(qa_prompt(question, chunks, language=language)) if engine.available() else ""
+    intent = detect_section_intent(question)
+    answer = engine.generate(qa_prompt(question, chunks, language=language, intent=intent)) if engine.available() else ""
     if not answer:
         answer = _fallback_answer(question, chunks)
     reasoning = _reasoning(question, answer, chunks)

@@ -4,18 +4,44 @@ from backend.localization.translator import language_name
 from backend.schemas.scheme import RetrievedChunk
 
 
-def qa_prompt(question: str, chunks: list[RetrievedChunk], language: str = "en") -> str:
+def scheme_extraction_prompt(text: str) -> str:
+    return f"""You extract structured data from Indian Government scheme documents.
+
+Return ONLY valid JSON with exactly these keys:
+scheme_name, category, objective, benefits, eligibility, required_documents, application_process, faq.
+
+Rules:
+- Use only the document text.
+- Use an empty string for missing text fields.
+- Use an empty list for missing list fields.
+- Keep list items concise.
+- Do not include markdown.
+
+Document text:
+{text[:12000]}
+
+JSON:
+"""
+
+
+def qa_prompt(question: str, chunks: list[RetrievedChunk], language: str = "en", intent: str = "") -> str:
     context = "\n\n".join(
-        f"[chunk:{chunk.id} page:{chunk.page_number} source:{chunk.document_name}]\n{chunk.text}"
+        f"[chunk:{chunk.id} page:{chunk.page_number} section:{chunk.section_title or 'Unknown'} source:{chunk.document_name}]\n{chunk.text}"
         for chunk in chunks
     )
     answer_language = language_name(language)
+    intent_rule = (
+        f'- The detected question section is "{intent}". Answer only from chunks with that section.\n'
+        if intent
+        else ""
+    )
     return f"""You are Yojana Mitra, an offline AI assistant for Indian Government Schemes.
 
 Use ONLY the information provided in the context.
 
 IMPORTANT RULES:
 - Answer ONLY what the user asked.
+{intent_rule}- Ignore FAQ chunks unless the user explicitly asks an FAQ.
 - If the user asks for eligibility, return ONLY the eligibility criteria.
 - If the user asks for required documents, return ONLY the required documents.
 - If the user asks for benefits, return ONLY the benefits.
