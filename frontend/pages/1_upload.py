@@ -5,7 +5,9 @@ Upload page: lets the user upload files for processing.
 import streamlit as st
 
 from backend.localization.translator import translate
+from frontend.components.theme_loader import load_theme
 
+load_theme()
 language = st.session_state.get("language", "English")
 
 st.title(translate("upload_title", language))

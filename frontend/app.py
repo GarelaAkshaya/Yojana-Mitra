@@ -14,6 +14,7 @@ import streamlit as st
 
 from backend.localization.translator import translate
 from backend.storage.repository import Repository
+from frontend.components.theme_loader import load_theme
 from frontend.components.language_buttons import language_buttons
 from frontend.services.chat_flow import answer_prompt, transcribe_audio
 
@@ -39,12 +40,11 @@ def load_css(file_path: str) -> None:
 
 
 def main() -> None:
-    load_css(str(CSS_PATH))
+    load_theme()
     st.session_state.setdefault("language", "en")
     st.session_state.setdefault("home_question_input", "")
     language = st.session_state.get("language", "en")
 
-    st.sidebar.image(str(LOGO_PATH), width=120)
     st.sidebar.title(translate("navigation", language))
     st.sidebar.markdown(
         """
@@ -57,7 +57,6 @@ def main() -> None:
         """
     )
 
-    st.image(str(LOGO_PATH), width=130)
     st.title(translate("welcome_title", language))
     st.write(translate("welcome_body", language))
     language_buttons("home_language")

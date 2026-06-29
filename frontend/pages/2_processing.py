@@ -9,7 +9,9 @@ import streamlit as st
 from backend.core.config import get_settings
 from backend.localization.translator import translate
 from backend.pipeline.ingestion_pipeline import run_ingestion_pipeline
+from frontend.components.theme_loader import load_theme
 
+load_theme()
 language = st.session_state.get("language", "English")
 
 st.title(translate("processing_title", language))
@@ -47,7 +49,16 @@ else:
         progress_bar.progress((i + 1) / len(uploaded_files))
 
     st.session_state["processing_done"] = True
-    st.success(translate("processing_complete", language))
+    st.success("Document Processed")
+
+    for document in processed_documents[-len(uploaded_files) :]:
+        with st.container(border=True):
+            st.subheader(document["scheme"]["scheme_name"])
+            st.write(f"Pages Extracted: {document.get('pages_extracted', 0)}")
+            st.write(f"Chunks Created: {document.get('chunks_created', 0)}")
+            st.write("Structured Information Extracted ✓" if document.get("structured_extracted") else "Structured Information Extracted")
+            st.write("SQLite Saved ✓" if document.get("sqlite_saved") else "SQLite Saved")
+            st.write("Vector Index Ready ✓" if document.get("vector_index_ready") else "Vector Index Ready")
 
     if st.button(translate("continue_chat", language)):
         st.switch_page("pages/3_chat.py")
