@@ -13,6 +13,7 @@
     "documents",
     "important_dates",
     "application_process",
+    "faq",
     "contact",
     "summary"
   ],
@@ -28,6 +29,7 @@
     "documents": { "type": "array", "items": { "type": "string" } },
     "important_dates": { "type": "array", "items": { "type": "string" } },
     "application_process": { "type": "array", "items": { "type": "string" } },
+    "faq": { "type": "array", "items": { "type": "string" } },
     "contact": {
       "type": "object",
       "properties": {
