@@ -25,6 +25,7 @@ class Scheme(BaseModel):
     documents: list[str] = Field(default_factory=list)
     important_dates: list[str] = Field(default_factory=list)
     application_process: list[str] = Field(default_factory=list)
+    faq: list[str] = Field(default_factory=list)
     contact: ContactInfo = Field(default_factory=ContactInfo)
     summary: str = "Not specified in document"
     confidence: float = 0.0
@@ -49,6 +50,10 @@ class Chunk(BaseModel):
     page_number: int = 1
     section_title: str = ""
     chunk_index: int = 0
+
+    @property
+    def section(self) -> str:
+        return self.section_title
 
 
 class RetrievedChunk(Chunk):

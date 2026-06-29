@@ -7,6 +7,7 @@ from typing import Any
 
 from backend.schemas.scheme import Chunk, DocumentRecord, GroundedAnswer, RetrievedChunk, Scheme
 from backend.storage.db_manager import DatabaseManager
+from backend.structuring.section_utils import SECTION_TO_DETAIL_KEY, is_useful_text, items_from_chunks, useful_items
 
 
 class Repository:
@@ -48,6 +49,17 @@ class Repository:
                 (status, error, document_id),
             )
 
+    def update_document_language(self, document_id: int, language: str) -> None:
+        with self.db.connect() as conn:
+            conn.execute(
+                """
+                UPDATE documents
+                SET language = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (language, document_id),
+            )
+
     def save_scheme(self, document_id: int, scheme: Scheme) -> int:
         payload = {
             "eligibility_json": json.dumps(scheme.eligibility, ensure_ascii=False),
@@ -87,7 +99,21 @@ class Repository:
                     payload["raw_json"],
                 ),
             )
-            return int(cur.lastrowid)
+            scheme_id = int(cur.lastrowid)
+            self._insert_section_items(conn, "benefits", scheme_id, scheme.benefits)
+            self._insert_section_items(conn, "eligibility", scheme_id, scheme.eligibility)
+            self._insert_section_items(conn, "required_documents", scheme_id, scheme.documents)
+            self._insert_section_items(conn, "application_process", scheme_id, scheme.application_process)
+            self._insert_section_items(conn, "faqs", scheme_id, scheme.faq)
+            return scheme_id
+
+    @staticmethod
+    def _insert_section_items(conn: Any, table: str, scheme_id: int, items: list[str]) -> None:
+        for index, item in enumerate(items):
+            conn.execute(
+                f"INSERT INTO {table}(scheme_id, item_order, text) VALUES (?, ?, ?)",
+                (scheme_id, index, item),
+            )
 
     def insert_chunks(self, chunks: list[Chunk]) -> list[int]:
         ids: list[int] = []
@@ -162,6 +188,45 @@ class Repository:
         except Exception:
             return []
 
+    def get_scheme_details(self, document_id: int) -> dict[str, Any] | None:
+        with self.db.connect() as conn:
+            scheme = conn.execute(
+                """
+                SELECT s.*, d.filename, d.file_path
+                FROM schemes s JOIN documents d ON d.id = s.document_id
+                WHERE s.document_id = ?
+                """,
+                (document_id,),
+            ).fetchone()
+            if not scheme:
+                return None
+            details = dict(scheme)
+            section_tables = {
+                "benefits": "benefits",
+                "eligibility": "eligibility",
+                "documents": "required_documents",
+                "application_process": "application_process",
+                "faq": "faqs",
+            }
+            for key, table in section_tables.items():
+                rows = conn.execute(
+                    f"SELECT text FROM {table} WHERE scheme_id = ? ORDER BY item_order, id",
+                    (details["id"],),
+                ).fetchall()
+                if rows:
+                    details[key] = useful_items([row["text"] for row in rows])
+                else:
+                    json_key = "documents_json" if key == "documents" else f"{key}_json"
+                    details[key] = useful_items(json.loads(details.get(json_key, "[]")) if json_key in details else [])
+        chunks = self.get_chunks(document_id)
+        for section_title, key in SECTION_TO_DETAIL_KEY.items():
+            if not details.get(key):
+                details[key] = items_from_chunks(chunks, section_title)
+        if not is_useful_text(details.get("objective")):
+            objective_items = items_from_chunks(chunks, "Objective", limit=4)
+            details["objective"] = " ".join(objective_items) if objective_items else details.get("objective", "")
+        return details
+
     def list_schemes(self) -> list[dict[str, Any]]:
         with self.db.connect() as conn:
             rows = conn.execute(
@@ -221,4 +286,4 @@ class Repository:
     @staticmethod
     def cache_key(document_id: int | None, question: str, language: str = "en") -> str:
         normalized = " ".join(question.lower().split())
-        return sha256(f"{document_id or 'all'}:{language}:{normalized}".encode("utf-8")).hexdigest()
+        return sha256(f"qa-v2:{document_id or 'all'}:{language}:{normalized}".encode("utf-8")).hexdigest()

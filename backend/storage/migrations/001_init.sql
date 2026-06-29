@@ -34,6 +34,46 @@ CREATE TABLE IF NOT EXISTS schemes (
     FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS benefits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheme_id INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    FOREIGN KEY (scheme_id) REFERENCES schemes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS eligibility (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheme_id INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    FOREIGN KEY (scheme_id) REFERENCES schemes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS required_documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheme_id INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    FOREIGN KEY (scheme_id) REFERENCES schemes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS application_process (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheme_id INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    FOREIGN KEY (scheme_id) REFERENCES schemes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS faqs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    scheme_id INTEGER NOT NULL,
+    item_order INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    FOREIGN KEY (scheme_id) REFERENCES schemes(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS chunks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL,
@@ -97,5 +137,6 @@ CREATE TABLE IF NOT EXISTS response_cache (
 );
 
 CREATE INDEX IF NOT EXISTS idx_chunks_document ON chunks(document_id);
+CREATE INDEX IF NOT EXISTS idx_chunks_section ON chunks(section_title);
 CREATE INDEX IF NOT EXISTS idx_schemes_state ON schemes(state);
 CREATE INDEX IF NOT EXISTS idx_schemes_category ON schemes(category);

@@ -13,6 +13,7 @@ SECTION_ALIASES = {
     "application_process": ["application process", "how to apply", "procedure"],
     "important_dates": ["important dates", "last date", "deadline"],
     "objective": ["objective", "purpose"],
+    "faq": ["faq", "faqs", "frequently asked questions"],
     "contact": ["contact", "helpline"],
 }
 
@@ -50,6 +51,7 @@ def extract_scheme_fields(text: str) -> Scheme:
         documents=split_list_block(_single_section(sections, "documents")),
         important_dates=split_list_block(_single_section(sections, "important_dates")),
         application_process=split_list_block(_single_section(sections, "application_process")),
+        faq=split_list_block(_single_section(sections, "faq")),
         contact=contact,
         summary=summary,
         confidence=min(confidence, 0.95),
