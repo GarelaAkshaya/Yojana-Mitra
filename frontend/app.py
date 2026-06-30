@@ -3,12 +3,11 @@ Streamlit entrypoint for the application.
 Run with: streamlit run frontend/app.py
 """
 
-import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+from bootstrap import bootstrap_project
+
+bootstrap_project()
 
 import streamlit as st  # noqa: E402
 
@@ -36,11 +35,11 @@ st.set_page_config(
 )
 
 
-def load_css(file_path: str) -> None:
+def load_css(file_path: str | Path) -> None:
     """Load a local CSS file into the Streamlit app."""
+    path = Path(file_path)
     try:
-        with open(file_path) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+        st.markdown(f"<style>{path.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
     except FileNotFoundError:
         pass
 

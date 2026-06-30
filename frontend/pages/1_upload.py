@@ -3,6 +3,7 @@ Upload page: lets the user upload files for processing.
 """
 
 import streamlit as st
+from _bootstrap import bootstrap_project  # noqa: F401
 
 from backend.localization.translator import translate
 from frontend.components.theme_loader import load_theme

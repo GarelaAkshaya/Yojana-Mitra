@@ -2,14 +2,18 @@
 Processing page: shows progress/status while uploaded files are processed.
 """
 
+import logging
 from pathlib import Path
 
 import streamlit as st
+from _bootstrap import bootstrap_project  # noqa: F401
 
 from backend.core.config import get_settings
 from backend.localization.translator import translate
 from backend.pipeline.ingestion_pipeline import run_ingestion_pipeline
 from frontend.components.theme_loader import load_theme
+
+logger = logging.getLogger(__name__)
 
 load_theme()
 language = st.session_state.get("language", "English")
@@ -41,8 +45,11 @@ else:
             target_path.write_bytes(file.getvalue())
             try:
                 result = run_ingestion_pipeline(target_path)
-            except Exception as exc:
-                st.error(f"{translate('process_failed', language, name=file.name)}: {exc}")
+            except Exception:
+                logger.exception("Document processing failed for %s", file.name)
+                st.error(
+                    f"{translate('process_failed', language, name=file.name)}. {translate('check_logs', language)}"
+                )
                 st.stop()
             processed_documents.append(result.model_dump())
             processed_keys.add(upload_key)

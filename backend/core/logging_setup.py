@@ -7,6 +7,8 @@ from backend.core.config import get_settings
 
 
 def configure_logging(level: int = logging.INFO) -> None:
+    if logging.getLogger().handlers:
+        return
     settings = get_settings()
     log_dir = Path(settings.paths.data_dir) / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)

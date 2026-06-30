@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from backend.core.pydantic_compat import BaseModel
@@ -13,6 +14,8 @@ from backend.schemas.scheme import Scheme
 from backend.storage.repository import Repository
 from backend.structuring.chunker import chunk_text
 from backend.structuring.slm_extractor import extract_structured_scheme
+
+logger = logging.getLogger(__name__)
 
 
 class IngestionResult(BaseModel):
@@ -55,6 +58,7 @@ def run_ingestion_pipeline(file_path: str | Path, repo: Repository | None = None
             vector_index_ready=True,
         )
     except Exception as exc:
+        logger.exception("Ingestion pipeline failed for document %s at %s", document_id, record.file_path)
         repo.update_document_status(document_id, "failed", str(exc))
         raise
 

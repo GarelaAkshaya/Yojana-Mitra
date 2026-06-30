@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from backend.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class LlamaCppEngine:
@@ -29,6 +32,7 @@ class LlamaCppEngine:
                         verbose=False,
                     )
                 except Exception:
+                    logger.exception("Local LLM could not be loaded from %s", self.model_path)
                     self._llm = False
         return self._llm
 

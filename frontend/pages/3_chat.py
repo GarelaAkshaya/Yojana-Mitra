@@ -5,6 +5,7 @@ Chat page: conversational interface with the assistant.
 from html import escape
 
 import streamlit as st
+from _bootstrap import bootstrap_project  # noqa: F401
 
 from backend.localization.translator import (
     localize_items,

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import math
 from pathlib import Path
 
 from backend.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class LocalEncoder:
@@ -23,6 +26,7 @@ class LocalEncoder:
                 self._model = SentenceTransformer(str(self.model_path), local_files_only=True)
                 self.dimension = int(self._model.get_sentence_embedding_dimension())
             except Exception:
+                logger.exception("Local embedding model could not be loaded from %s", self.model_path)
                 self._model = False
         return self._model
 
