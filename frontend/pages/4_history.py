@@ -2,11 +2,19 @@
 History page: view past sessions / chat history.
 """
 
-import streamlit as st
-from _bootstrap import bootstrap_project  # noqa: F401
+import sys
+from pathlib import Path
 
-from backend.localization.translator import translate
-from frontend.components.theme_loader import load_theme
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+import streamlit as st  # noqa: E402
+from backend.localization.translator import translate  # noqa: E402
+from frontend.bootstrap import bootstrap_project  # noqa: E402, F401
+from frontend.components.theme_loader import load_theme  # noqa: E402
+
+bootstrap_project()
 
 load_theme()
 language = st.session_state.get("language", "English")

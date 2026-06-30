@@ -2,25 +2,32 @@
 Chat page: conversational interface with the assistant.
 """
 
+import sys
 from html import escape
+from pathlib import Path
 
-import streamlit as st
-from _bootstrap import bootstrap_project  # noqa: F401
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
+import streamlit as st  # noqa: E402
 from backend.localization.translator import (
     localize_items,
     localize_value,
     translate,
 )
-from backend.storage.repository import Repository
+from backend.storage.repository import Repository  # noqa: E402
 from backend.structuring.section_utils import useful_items
+from frontend.bootstrap import bootstrap_project  # noqa: E402, F401
 from frontend.components.chat_display import (
     ICONS,
     render_chat_message,
     render_citations,
 )
-from frontend.components.theme_loader import load_theme
-from frontend.services.chat_flow import answer_question, transcribe_audio
+from frontend.components.theme_loader import load_theme  # noqa: E402
+from frontend.services.chat_flow import answer_question, transcribe_audio  # noqa: E402
+
+bootstrap_project()
 
 
 def _render_items(title: str, items: list[str], icon: str, empty_text: str, language: str) -> None:

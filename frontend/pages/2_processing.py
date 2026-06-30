@@ -3,15 +3,21 @@ Processing page: shows progress/status while uploaded files are processed.
 """
 
 import logging
+import sys
 from pathlib import Path
 
-import streamlit as st
-from _bootstrap import bootstrap_project  # noqa: F401
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.core.config import get_settings
-from backend.localization.translator import translate
-from backend.pipeline.ingestion_pipeline import run_ingestion_pipeline
-from frontend.components.theme_loader import load_theme
+import streamlit as st  # noqa: E402
+from backend.core.config import get_settings  # noqa: E402
+from backend.localization.translator import translate  # noqa: E402
+from backend.pipeline.ingestion_pipeline import run_ingestion_pipeline  # noqa: E402
+from frontend.bootstrap import bootstrap_project  # noqa: E402, F401
+from frontend.components.theme_loader import load_theme  # noqa: E402
+
+bootstrap_project()
 
 logger = logging.getLogger(__name__)
 
