@@ -17,54 +17,97 @@ def generate_answer(
 ) -> GroundedAnswer:
     engine = LlamaCppEngine()
     intent = detect_section_intent(question)
-    answer = engine.generate(qa_prompt(question, chunks, language=language, intent=intent)) if engine.available() else ""
+
+    # No retrieved context
+    if not chunks:
+        return guard_answer(
+            "Not enough information in the uploaded document.",
+            confidence,
+            [],
+            ["No relevant document chunks were retrieved."],
+            language=language,
+        )
+
+    answer = (
+        engine.generate(
+            qa_prompt(
+                question,
+                chunks,
+                language=language,
+                intent=intent,
+            )
+        )
+        if engine.available()
+        else ""
+    )
+
     if not answer:
         answer = _fallback_answer(question, chunks)
+
     reasoning = _reasoning(question, answer, chunks)
-    return guard_answer(answer, confidence, chunks, reasoning)
+    return guard_answer(answer, confidence, chunks, reasoning, language=language)
 
 
 def _fallback_answer(question: str, chunks: list[RetrievedChunk]) -> str:
-    if not chunks:
-        return ""
-    lowered = question.lower()
-    joined = "\n".join(chunk.text for chunk in chunks)
-    if any(token in lowered for token in ["document", "documents", "certificate"]):
-        return _lines_after_keywords(joined, ["documents", "required documents"])
-    if any(token in lowered for token in ["benefit", "amount", "assistance"]):
-        return _lines_after_keywords(joined, ["benefits", "assistance", "subsidy"])
-    if any(token in lowered for token in ["eligible", "eligibility", "who can apply", "income", "age"]):
-        return _lines_after_keywords(joined, ["eligibility", "eligible", "beneficiaries"])
-    if any(token in lowered for token in ["last date", "deadline", "date"]):
-        date = re.search(r"\b\d{1,2}[-/ ](?:\d{1,2}|[A-Za-z]{3,9})[-/ ]\d{2,4}\b", joined)
-        return date.group(0) if date else _lines_after_keywords(joined, ["last date", "important dates"])
-    return chunks[0].text[:450].strip()
+    intent = detect_section_intent(question)
+    if intent:
+        section_lines = _section_lines(chunks, intent)
+        if section_lines:
+            return "\n".join(f"- {line}" for line in section_lines[:8])
+
+    question_terms = {
+        _term_key(term)
+        for term in re.findall(r"[\w\u0900-\u097F\u0C00-\u0C7F]+", question.lower())
+        if len(_term_key(term)) > 2
+    }
+    best_sentence = ""
+    best_score = 0
+    for chunk in chunks:
+        for sentence in re.split(r"(?<=[.!?।॥])\s+|\n+", chunk.text):
+            sentence = sentence.strip(" -•\t")
+            if len(sentence) < 4:
+                continue
+            sentence_terms = {_term_key(term) for term in re.findall(r"[\w\u0900-\u097F\u0C00-\u0C7F]+", sentence.lower())}
+            score = len(question_terms & sentence_terms)
+            if score > best_score:
+                best_sentence = sentence
+                best_score = score
+    return best_sentence or chunks[0].text[:500].strip()
 
 
-def _lines_after_keywords(text: str, keywords: list[str]) -> str:
-    lines = [line.strip(" -•\t") for line in text.splitlines() if line.strip()]
-    selected: list[str] = []
-    capture = False
-    for line in lines:
-        lowered = line.lower()
-        if any(keyword in lowered for keyword in keywords):
-            capture = True
-            remainder = re.sub(r"^[^:]{2,40}[:\-]\s*", "", line)
-            if remainder and remainder != line:
-                selected.append(remainder.strip())
+def _section_lines(chunks: list[RetrievedChunk], intent: str) -> list[str]:
+    lines: list[str] = []
+    seen: set[str] = set()
+    for chunk in chunks:
+        if intent and _normalize_section(chunk.section_title) != _normalize_section(intent):
             continue
-        if capture:
-            if re.match(r"^[A-Z][A-Za-z ]{2,35}:?$", line) and selected:
-                break
-            selected.append(line)
-        if len(selected) >= 6:
-            break
-    return "\n".join(selected).strip() or text[:450].strip()
+        for line in chunk.text.splitlines():
+            cleaned = re.sub(r"^\s*(?:[-*•]|\d+[\).])\s*", "", line).strip(" :-\t")
+            if not cleaned or _normalize_section(cleaned) == _normalize_section(intent):
+                continue
+            key = re.sub(r"\s+", " ", cleaned.lower())
+            if key not in seen:
+                seen.add(key)
+                lines.append(cleaned)
+    return lines
+
+
+def _term_key(term: str) -> str:
+    cleaned = re.sub(r"[^\w\u0900-\u097F\u0C00-\u0C7F]", "", term.lower())
+    for suffix in ("ibility", "able", "ible", "ity", "ed", "ing", "s"):
+        if cleaned.endswith(suffix) and len(cleaned) > len(suffix) + 3:
+            return cleaned[: -len(suffix)]
+    return cleaned
+
+
+def _normalize_section(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
 
 
 def _reasoning(question: str, answer: str, chunks: list[RetrievedChunk]) -> list[str]:
     if not chunks:
-        return []
-    if any(token in question.lower() for token in ["eligible", "income", "age", "can i apply"]):
-        return ["Matched the question against retrieved eligibility context.", "Answer is grounded in the cited document chunks."]
-    return ["Answer generated from the highest scoring retrieved chunks."]
+        return ["No document context was available."]
+    section = detect_section_intent(question)
+    if section:
+        return [f"Used retrieved context from the {section} section."]
+    return ["Used the most relevant retrieved document chunk."]

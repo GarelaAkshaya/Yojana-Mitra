@@ -9,8 +9,8 @@ from backend.storage.repository import Repository
 
 
 SECTION_QUERY_ALIASES: dict[str, tuple[str, ...]] = {
-    "Eligibility": ("eligib", "eligible", "who can apply", "beneficiar", "income", "age", "पात्र", "योग्यता", "అర్హ", "అర్హత"),
-    "Benefits": ("benefit", "amount", "assistance", "subsidy", "support", "लाभ", "सहायता", "ప్రయోజ", "లాభ", "సహాయం"),
+    "Eligibility": ("eligib", "eligible", "who can apply", "beneficiar", "income", "age", "पात्र", "योग्यता", "अर्ह", "అర్హ", "అర్హత"),
+    "Benefits": ("benefit", "amount", "assistance", "subsidy", "support", "लाभ", "लाब", "सहायता", "ప్రయోజ", "లాభ", "సహాయం"),
     "Required Documents": ("document", "certificate", "proof", "papers", "दस्तावेज", "प्रमाण", "పత్ర", "సర్టిఫికెట్"),
     "Application Process": ("apply", "application", "procedure", "registration", "submit", "आवेदन", "कैसे", "దరఖాస్తు", "ఎలా"),
     "Objective": ("objective", "purpose", "aim", "उद्देश्य", "లక్ష్యం", "ఉద్దేశ"),
@@ -105,4 +105,4 @@ def _same_section(left: str, right: str) -> bool:
 
 
 def _normalize_section(section: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "", section.lower())
+    return re.sub(r"[^\w\u0900-\u097F\u0C00-\u0C7F]+", "", section.lower())

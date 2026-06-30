@@ -49,3 +49,29 @@ def test_hybrid_search_prefers_requested_section_over_faq(tmp_path):
     assert results
     assert results[0].section_title == "Eligibility"
     assert "resident farmer" in results[0].text
+
+
+def test_structured_answer_handles_hindi_benefit_question(tmp_path):
+    repo = Repository(DatabaseManager(tmp_path / "test.sqlite3"))
+    document_id = repo.create_document(
+        DocumentRecord(filename="scheme.txt", file_path="scheme.txt", file_type="txt", checksum="qa789")
+    )
+    repo.save_scheme(document_id, Scheme(scheme_name="Skill Scheme", benefits=["निःशुल्क प्रशिक्षण"]))
+
+    result = run_qa_pipeline("लाब क्या है", document_id=document_id, language="hi", repo=repo)
+
+    assert "निःशुल्क प्रशिक्षण" in result.answer
+    assert not result.refused
+
+
+def test_structured_answer_handles_telugu_eligibility_question(tmp_path):
+    repo = Repository(DatabaseManager(tmp_path / "test.sqlite3"))
+    document_id = repo.create_document(
+        DocumentRecord(filename="scheme.txt", file_path="scheme.txt", file_type="txt", checksum="qa790")
+    )
+    repo.save_scheme(document_id, Scheme(scheme_name="Rythu Scheme", eligibility=["తెలంగాణ రైతులు"]))
+
+    result = run_qa_pipeline("అర్హత ఏమిటి", document_id=document_id, language="te", repo=repo)
+
+    assert "తెలంగాణ రైతులు" in result.answer
+    assert not result.refused

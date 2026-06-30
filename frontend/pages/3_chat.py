@@ -6,15 +6,15 @@ from html import escape
 
 import streamlit as st
 
-from backend.localization.translator import translate
+from backend.localization.translator import localize_items, localize_value, translate
 from backend.storage.repository import Repository
 from backend.structuring.section_utils import useful_items
 from frontend.components.theme_loader import load_theme
 from frontend.services.chat_flow import answer_prompt, transcribe_audio
 
 
-def _render_items(title: str, items: list[str], icon: str, empty_text: str) -> None:
-    items = useful_items(items)
+def _render_items(title: str, items: list[str], icon: str, empty_text: str, language: str) -> None:
+    items = localize_items(useful_items(items), language)
     st.markdown(f"<div class='section-card'><div class='section-title'><span>{escape(icon)}</span>{escape(title)}</div>", unsafe_allow_html=True)
     if not items:
         st.markdown(f"<p class='muted'>{escape(empty_text)}</p></div>", unsafe_allow_html=True)
@@ -153,18 +153,18 @@ with structured_tab:
                 f"""
                 <div class="scheme-summary">
                   <p class="eyebrow">{escape(translate("structured_data", language))}</p>
-                  <h2>{escape(details.get("scheme_name") or translate("not_specified_short", language))}</h2>
+                  <h2>{escape(localize_value(details.get("scheme_name") or translate("not_specified_short", language), language))}</h2>
                   <div class="summary-grid">
-                    <div><span>{escape(translate("category", language))}</span><strong>{escape(details.get("category") or translate("not_specified_short", language))}</strong></div>
-                    <div><span>{escape(translate("source_file", language))}</span><strong>{escape(details.get("filename") or translate("not_specified_short", language))}</strong></div>
+                    <div><span>{escape(translate("category", language))}</span><strong>{escape(localize_value(details.get("category") or translate("not_specified_short", language), language))}</strong></div>
+                    <div><span>{escape(translate("source_file", language))}</span><strong>{escape(localize_value(details.get("filename") or translate("not_specified_short", language), language))}</strong></div>
                   </div>
-                  <p>{escape(details.get("objective") or translate("not_specified_short", language))}</p>
+                  <p>{escape(localize_value(details.get("objective") or translate("not_specified_short", language), language))}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
             empty_text = translate("not_specified_short", language)
-            _render_items(translate("benefits", language), details.get("benefits", []), "OK", empty_text)
-            _render_items(translate("eligibility", language), details.get("eligibility", []), "EL", empty_text)
-            _render_items(translate("required_documents", language), details.get("documents", []), "DOC", empty_text)
-            _render_items(translate("application_process", language), details.get("application_process", []), "GO", empty_text)
+            _render_items(translate("benefits", language), details.get("benefits", []), "OK", empty_text, language)
+            _render_items(translate("eligibility", language), details.get("eligibility", []), "EL", empty_text, language)
+            _render_items(translate("required_documents", language), details.get("documents", []), "DOC", empty_text, language)
+            _render_items(translate("application_process", language), details.get("application_process", []), "GO", empty_text, language)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from backend.llm.answer_generator import generate_answer
 from backend.core.pydantic_compat import BaseModel
+from backend.localization.translator import localize_items, translate
 from backend.retrieval.hybrid_search import detect_section_intent
 from backend.schemas.scheme import GroundedAnswer, RetrievedChunk
 from backend.storage.repository import Repository
@@ -23,7 +24,7 @@ def run_qa_pipeline(question: str, document_id: int | None = None, language: str
     if cached:
         return QAResult.model_validate(cached)
 
-    structured = _structured_section_answer(question, document_id, repo)
+    structured = _structured_section_answer(question, document_id, repo, language)
     if structured:
         repo.set_cached_response(document_id, question, structured.model_dump(), language)
         return structured
@@ -42,7 +43,7 @@ def run_qa_pipeline(question: str, document_id: int | None = None, language: str
     return result
 
 
-def _structured_section_answer(question: str, document_id: int | None, repo: Repository) -> QAResult | None:
+def _structured_section_answer(question: str, document_id: int | None, repo: Repository, language: str = "en") -> QAResult | None:
     if document_id is None:
         return None
     intent = detect_section_intent(question)
@@ -52,7 +53,7 @@ def _structured_section_answer(question: str, document_id: int | None, repo: Rep
     details = repo.get_scheme_details(document_id)
     if not details:
         return None
-    items = useful_items(details.get(key, []))
+    items = localize_items(useful_items(details.get(key, [])), language)
     if not items:
         return None
     chunks = [
@@ -66,7 +67,7 @@ def _structured_section_answer(question: str, document_id: int | None, repo: Rep
         answer=answer,
         confidence=1.0,
         citations=citations,
-        reasoning=[f"Answered directly from the saved {intent} structured section."],
+        reasoning=[translate("structured_data", language)],
         refused=False,
     )
 
