@@ -47,7 +47,7 @@ class Repository:
                     record.language,
                 ),
             )
-            return int(cur.lastrowid)
+            return int(cur.lastrowid or 0)
 
     def update_document_status(
         self, document_id: int, status: str, error: str | None = None
@@ -116,7 +116,7 @@ class Repository:
                     payload["raw_json"],
                 ),
             )
-            scheme_id = int(cur.lastrowid)
+            scheme_id = int(cur.lastrowid or 0)
             self._insert_section_items(conn, "benefits", scheme_id, scheme.benefits)
             self._insert_section_items(
                 conn, "eligibility", scheme_id, scheme.eligibility
@@ -161,7 +161,7 @@ class Repository:
                         chunk.text,
                     ),
                 )
-                ids.append(int(cur.lastrowid))
+                ids.append(int(cur.lastrowid or 0))
         return ids
 
     def save_embedding(

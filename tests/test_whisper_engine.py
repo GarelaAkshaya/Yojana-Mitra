@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -51,7 +52,7 @@ def test_transcribe_forces_selected_telugu_language(tmp_path: Path):
             return [Segment()], object()
 
     engine = WhisperEngine(tmp_path)
-    engine._model = Model()
+    engine._model = cast(Any, Model())
 
     transcript = engine.transcribe(audio_path, language="Telugu")
 

@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Any, get_origin, get_type_hints
 
 try:
-    from pydantic import BaseModel, Field
+    from pydantic import BaseModel as PydanticBaseModel  # noqa: F401
+    from pydantic import Field as PydanticField  # noqa: F401
 except ImportError:
 
     class _FieldInfo:

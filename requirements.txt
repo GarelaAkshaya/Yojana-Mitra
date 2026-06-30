@@ -10,3 +10,4 @@ faiss-cpu>=1.8
 llama-cpp-python>=0.2.80
 faster-whisper>=1.0
 pytest>=8.0
+types-PyYAML

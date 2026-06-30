@@ -127,9 +127,9 @@ def hybrid_search(
             ) * (1.0 / (rank + 1))
     for rank, (chunk_id, score) in enumerate(vector_hits):
         if chunk_id in all_chunks:
-            chunk = all_chunks[chunk_id]
+            vector_chunk = all_chunks[chunk_id]
             fused[chunk_id] = fused.get(chunk_id, 0.0) + _section_weight(
-                chunk, target_section
+                vector_chunk, target_section
             ) * (max(score, 0.0) + 0.25 / (rank + 1))
 
     if not fused:
@@ -156,10 +156,12 @@ def hybrid_search(
         ]
         ranked = matching or ranked
     for chunk_id, score in ranked[:top_k]:
-        chunk = all_chunks.get(chunk_id)
-        if chunk:
-            chunk.score = min(float(score), 1.0)
-            results.append(chunk)
+        result_chunk = all_chunks.get(chunk_id)
+
+        if result_chunk is not None:
+            result_chunk.score = min(float(score), 1.0)
+            results.append(result_chunk)
+
     return results
 
 
