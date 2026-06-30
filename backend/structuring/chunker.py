@@ -9,17 +9,17 @@ from backend.structuring.normalizer import normalize_text
 
 
 SECTION_ALIASES: dict[str, tuple[str, ...]] = {
-    "Objective": ("objective", "purpose", "about the scheme"),
-    "Benefits": ("benefit", "benefits", "assistance", "financial assistance", "subsidy"),
-    "Eligibility": ("eligibility", "eligible", "who can apply", "beneficiaries", "eligibility criteria"),
-    "Required Documents": ("documents", "document required", "documents required", "required documents"),
-    "Application Process": ("application", "application process", "how to apply", "procedure", "apply online"),
-    "Important Dates": ("important dates", "last date", "deadline"),
-    "FAQs": ("faq", "faqs", "frequently asked questions"),
-    "Contact Information": ("contact", "helpline", "contact information"),
+    "Objective": ("objective", "purpose", "about the scheme", "उद्देश्य", "लक्ष्य", "లక్ష్యం", "ఉద్దేశ్యం"),
+    "Benefits": ("benefit", "benefits", "assistance", "financial assistance", "subsidy", "लाभ", "लाब", "सहायता", "फायदे", "ప్రయోజనాలు", "లాభాలు", "సహాయం", "సబ్సిడీ"),
+    "Eligibility": ("eligibility", "eligible", "who can apply", "beneficiaries", "eligibility criteria", "पात्रता", "योग्यता", "कौन आवेदन कर सकता", "अर्हता", "అర్హత", "అర్హులు", "ఎవరు దరఖాస్తు"),
+    "Required Documents": ("documents", "document required", "documents required", "required documents", "आवश्यक दस्तावेज", "दस्तावेज", "प्रमाण पत्र", "అవసరమైన పత్రాలు", "పత్రాలు", "ధృవపత్రాలు"),
+    "Application Process": ("application", "application process", "how to apply", "procedure", "apply online", "आवेदन प्रक्रिया", "कैसे आवेदन", "प्रक्रिया", "దరఖాస్తు ప్రక్రియ", "ఎలా దరఖాస్తు", "విధానం"),
+    "Important Dates": ("important dates", "last date", "deadline", "महत्वपूर्ण तिथियां", "अंतिम तिथि", "तारीख", "ముఖ్యమైన తేదీలు", "చివరి తేదీ", "గడువు"),
+    "FAQs": ("faq", "faqs", "frequently asked questions", "प्रश्न", "सवाल", "अक्सर पूछे जाने वाले प्रश्न", "ప్రశ్నలు", "తరచుగా అడిగే ప్రశ్నలు"),
+    "Contact Information": ("contact", "helpline", "contact information", "संपर्क", "हेल्पलाइन", "సంప్రదింపు", "హెల్ప్‌లైన్"),
 }
 
-HEADING_PATTERN = re.compile(r"^\s*(?:\d+[\).]\s*)?([A-Za-z][A-Za-z /&-]{2,80})\s*:?\s*$")
+HEADING_PATTERN = re.compile(r"^\s*(?:\d+[\).]\s*)?([\w\u0900-\u097F\u0C00-\u0C7F][\w\u0900-\u097F\u0C00-\u0C7F /&().,-]{1,90})\s*:?\s*$")
 
 
 def chunk_text(raw: RawTextResult, document_id: int) -> list[Chunk]:
@@ -81,17 +81,17 @@ def _section_paragraphs(text: str) -> list[str]:
 
 
 def _section_title(line: str) -> str:
-    compact = line.strip().strip(":-").lower()
+    compact = re.sub(r"^\s*(?:\d+[\).]\s*)?", "", line.strip().strip(":-।॥").lower())
     if len(compact) > 90:
         return ""
+    for section, aliases in SECTION_ALIASES.items():
+        if any(compact == alias or compact.startswith(f"{alias}:") for alias in aliases):
+            return section
     heading_match = HEADING_PATTERN.match(line)
     if not heading_match and ":" in line:
         heading_match = HEADING_PATTERN.match(line.split(":", 1)[0].strip())
     if not heading_match:
         return ""
-    for section, aliases in SECTION_ALIASES.items():
-        if any(compact == alias or compact.startswith(f"{alias}:") for alias in aliases):
-            return section
     return ""
 
 

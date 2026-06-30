@@ -5,7 +5,7 @@ import re
 from backend.schemas.scheme import RetrievedChunk
 
 
-PLACEHOLDERS = {"", "not specified in document", "not specified"}
+PLACEHOLDERS = {"", "not specified in document", "not specified", "दस्तावेज़ में निर्दिष्ट नहीं", "పత్రంలో పేర్కొనలేదు"}
 
 SECTION_TO_DETAIL_KEY = {
     "Benefits": "benefits",
@@ -16,16 +16,16 @@ SECTION_TO_DETAIL_KEY = {
 }
 
 SECTION_EQUIVALENTS = {
-    "Benefits": ("benefit", "benefits", "assistance", "financial assistance", "subsidy"),
-    "Eligibility": ("eligibility", "eligible", "who can apply", "beneficiaries"),
-    "Required Documents": ("required documents", "documents", "documents required", "document required"),
-    "Application Process": ("application process", "application", "how to apply", "procedure"),
-    "Objective": ("objective", "purpose"),
-    "FAQs": ("faq", "faqs", "frequently asked questions"),
+    "Benefits": ("benefit", "benefits", "assistance", "financial assistance", "subsidy", "लाभ", "लाब", "सहायता", "ప్రయోజనాలు", "లాభాలు", "సహాయం"),
+    "Eligibility": ("eligibility", "eligible", "who can apply", "beneficiaries", "पात्रता", "योग्यता", "అర్హత", "అర్హులు"),
+    "Required Documents": ("required documents", "documents", "documents required", "document required", "आवश्यक दस्तावेज", "दस्तावेज", "అవసరమైన పత్రాలు", "పత్రాలు"),
+    "Application Process": ("application process", "application", "how to apply", "procedure", "आवेदन प्रक्रिया", "कैसे आवेदन", "దరఖాస్తు ప్రక్రియ", "ఎలా దరఖాస్తు"),
+    "Objective": ("objective", "purpose", "उद्देश्य", "లక్ష్యం", "ఉద్దేశ్యం"),
+    "FAQs": ("faq", "faqs", "frequently asked questions", "प्रश्न", "సवाल", "ప్రశ్నలు", "తరచుగా అడిగే ప్రశ్నలు"),
 }
 
 NEXT_SECTION_RE = re.compile(
-    r"^\s*(objective|benefits?|eligibility|eligible|required documents|documents|application process|how to apply|faqs?|frequently asked questions|contact|helpline|important dates?|last date)\s*:?\s*$",
+    r"^\s*(objective|benefits?|eligibility|eligible|required documents|documents|application process|how to apply|faqs?|frequently asked questions|contact|helpline|important dates?|last date|उद्देश्य|लाभ|लाब|पात्रता|योग्यता|आवश्यक दस्तावेज|दस्तावेज|आवेदन प्रक्रिया|संपर्क|లక్ష్యం|ఉద్దేశ్యం|ప్రయోజనాలు|లాభాలు|అర్హత|అవసరమైన పత్రాలు|పత్రాలు|దరఖాస్తు ప్రక్రియ|సంప్రదింపు)\s*:?\s*$",
     re.I,
 )
 
@@ -49,9 +49,13 @@ def items_from_chunks(chunks: list[RetrievedChunk], section_title: str, limit: i
     items: list[str] = []
     seen: set[str] = set()
     for chunk in chunks:
-        if not same_section(chunk.section_title, section_title):
+        if same_section(chunk.section_title, section_title):
+            candidates = _items_from_section_text(chunk.text, section_title)
+        elif not chunk.section_title:
+            candidates = _items_from_section_text(chunk.text, section_title, allow_fallback=False)
+        else:
             continue
-        for item in _items_from_section_text(chunk.text, section_title):
+        for item in candidates:
             key = re.sub(r"\s+", " ", item.lower())
             if key not in seen:
                 seen.add(key)
@@ -66,7 +70,7 @@ def section_text_from_chunks(chunks: list[RetrievedChunk], section_title: str, l
     return "\n".join(f"- {item}" for item in items)
 
 
-def _items_from_section_text(text: str, section_title: str) -> list[str]:
+def _items_from_section_text(text: str, section_title: str, allow_fallback: bool = True) -> list[str]:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     items: list[str] = []
     capture = False
@@ -87,7 +91,7 @@ def _items_from_section_text(text: str, section_title: str) -> list[str]:
             cleaned = _clean_item(line)
             if cleaned:
                 items.append(cleaned)
-    if not items and lines:
+    if allow_fallback and not items and lines:
         for line in lines:
             if NEXT_SECTION_RE.match(line):
                 continue
@@ -103,7 +107,7 @@ def _clean_item(line: str) -> str:
 
 
 def _normalize(value: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "", value.lower())
+    return re.sub(r"[^\w\u0900-\u097F\u0C00-\u0C7F]+", "", value.lower())
 
 
 def same_section(left: str, right: str) -> bool:

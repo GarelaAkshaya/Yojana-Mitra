@@ -7,14 +7,14 @@ from backend.structuring.normalizer import normalize_text, split_list_block
 
 
 SECTION_ALIASES = {
-    "eligibility": ["eligibility", "eligible", "who can apply", "beneficiaries"],
-    "benefits": ["benefits", "assistance", "financial assistance", "subsidy"],
-    "documents": ["documents", "required documents", "documents required"],
-    "application_process": ["application process", "how to apply", "procedure"],
-    "important_dates": ["important dates", "last date", "deadline"],
-    "objective": ["objective", "purpose"],
-    "faq": ["faq", "faqs", "frequently asked questions"],
-    "contact": ["contact", "helpline"],
+    "eligibility": ["eligibility", "eligible", "who can apply", "beneficiaries", "पात्रता", "योग्यता", "कौन आवेदन कर सकता", "अर्हता", "అర్హత", "అర్హులు", "ఎవరు దరఖాస్తు"],
+    "benefits": ["benefits", "assistance", "financial assistance", "subsidy", "लाभ", "लाब", "सहायता", "फायदे", "ప్రయోజనాలు", "లాభాలు", "సహాయం", "సబ్సిడీ"],
+    "documents": ["documents", "required documents", "documents required", "आवश्यक दस्तावेज", "दस्तावेज", "प्रमाण पत्र", "అవసరమైన పత్రాలు", "పత్రాలు", "ధృవపత్రాలు"],
+    "application_process": ["application process", "how to apply", "procedure", "आवेदन प्रक्रिया", "कैसे आवेदन", "प्रक्रिया", "దరఖాస్తు ప్రక్రియ", "ఎలా దరఖాస్తు", "విధానం"],
+    "important_dates": ["important dates", "last date", "deadline", "महत्वपूर्ण तिथियां", "अंतिम तिथि", "तारीख", "ముఖ్యమైన తేదీలు", "చివరి తేదీ", "గడువు"],
+    "objective": ["objective", "purpose", "उद्देश्य", "लक्ष्य", "లక్ష్యం", "ఉద్దేశ్యం"],
+    "faq": ["faq", "faqs", "frequently asked questions", "प्रश्न", "सवाल", "अक्सर पूछे जाने वाले प्रश्न", "ప్రశ్నలు", "తరచుగా అడిగే ప్రశ్నలు"],
+    "contact": ["contact", "helpline", "संपर्क", "हेल्पलाइन", "సంప్రదింపు", "హెల్ప్‌లైన్"],
 }
 
 
@@ -79,7 +79,7 @@ def _sections(text: str) -> dict[str, str]:
 
 
 def _section_key(line: str) -> str:
-    lowered = line.lower().strip(" :-")
+    lowered = re.sub(r"^\s*(?:\d+[\).]\s*)?", "", line.lower()).strip(" :-।॥")
     for key, aliases in SECTION_ALIASES.items():
         if any(lowered.startswith(alias) for alias in aliases):
             return key

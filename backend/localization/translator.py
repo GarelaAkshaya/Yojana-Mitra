@@ -12,6 +12,12 @@ NATIVE_LANGUAGE_NAMES = {
     "hi": "हिन्दी",
     "te": "తెలుగు",
 }
+PLACEHOLDER_VALUES = {
+    "not specified in document",
+    "not specified",
+    "not enough information in the uploaded document.",
+    "this question is outside the scope of the uploaded document.",
+}
 
 CATALOG = {
     "en": {
@@ -74,6 +80,7 @@ CATALOG = {
         "clear_history": "Clear History",
         "processed": "Document processed successfully. You can now ask questions.",
         "not_found": "Not enough information in the uploaded document.",
+        "outside_scope": "This question is outside the scope of the uploaded document.",
         "upload": "Upload",
         "ask": "Ask",
         "home_upload": "Upload PDF/Image",
@@ -139,6 +146,7 @@ CATALOG = {
         "clear_history": "इतिहास साफ करें",
         "processed": "दस्तावेज़ सफलतापूर्वक प्रोसेस हो गया. अब आप प्रश्न पूछ सकते हैं.",
         "not_found": "अपलोड किए गए दस्तावेज़ में पर्याप्त जानकारी नहीं है.",
+        "outside_scope": "यह प्रश्न अपलोड किए गए दस्तावेज़ के दायरे से बाहर है.",
         "upload": "अपलोड",
         "ask": "पूछें",
         "home_upload": "PDF/इमेज अपलोड करें",
@@ -204,6 +212,7 @@ CATALOG = {
         "clear_history": "చరిత్రను తొలగించండి",
         "processed": "పత్రం విజయవంతంగా ప్రాసెస్ అయింది. ఇప్పుడు మీరు ప్రశ్నలు అడగవచ్చు.",
         "not_found": "అప్లోడ్ చేసిన పత్రంలో సరిపడ సమాచారం లేదు.",
+        "outside_scope": "ఈ ప్రశ్న అప్లోడ్ చేసిన పత్రం పరిధికి బయట ఉంది.",
         "upload": "అప్లోడ్",
         "ask": "అడగండి",
         "home_upload": "PDF/ఇమేజ్ అప్లోడ్ చేయండి",
@@ -229,3 +238,36 @@ def translate(key: str, language: str = "en", **kwargs: object) -> str:
     code = language_code(language)
     text = CATALOG.get(code, CATALOG["en"]).get(key, CATALOG["en"].get(key, key))
     return text.format(**kwargs) if kwargs else text
+
+
+def localize_value(value: object, language: str = "en") -> str:
+    text = str(value or "").strip()
+    if text.lower() in PLACEHOLDER_VALUES:
+        if text.lower().startswith("not enough"):
+            return translate("not_found", language)
+        if text.lower().startswith("this question"):
+            return translate("outside_scope", language)
+        return translate("not_specified_short", language)
+    category_map = {
+        "hi": {
+            "education": "शिक्षा",
+            "agriculture": "कृषि",
+            "health": "स्वास्थ्य",
+            "employment": "रोज़गार",
+            "housing": "आवास",
+        },
+        "te": {
+            "education": "విద్య",
+            "agriculture": "వ్యవసాయం",
+            "health": "ఆరోగ్యం",
+            "employment": "ఉపాధి",
+            "housing": "గృహనిర్మాణం",
+        },
+    }
+    return category_map.get(language_code(language), {}).get(text.lower(), text)
+
+
+def localize_items(items: object, language: str = "en") -> list[str]:
+    if not isinstance(items, list):
+        return []
+    return [localize_value(item, language) for item in items]

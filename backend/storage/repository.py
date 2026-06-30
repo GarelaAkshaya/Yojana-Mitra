@@ -286,4 +286,4 @@ class Repository:
     @staticmethod
     def cache_key(document_id: int | None, question: str, language: str = "en") -> str:
         normalized = " ".join(question.lower().split())
-        return sha256(f"qa-v2:{document_id or 'all'}:{language}:{normalized}".encode("utf-8")).hexdigest()
+        return sha256(f"qa-v3:{document_id or 'all'}:{language}:{normalized}".encode("utf-8")).hexdigest()
