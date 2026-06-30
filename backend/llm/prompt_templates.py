@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from backend.localization.translator import language_name
+from backend.localization.text_sanitizer import sanitize_text
 from backend.schemas.scheme import RetrievedChunk
 
 
@@ -30,12 +31,13 @@ def qa_prompt(
     language: str = "en",
     intent: str = "",
 ) -> str:
+    selected_language = language_name(language)
     context = "\n\n".join(
-        f"[chunk:{chunk.id} page:{chunk.page_number} section:{chunk.section_title or 'Unknown'} source:{chunk.document_name}]\n{chunk.text}"
+        f"[chunk:{chunk.id} page:{chunk.page_number} section:{chunk.section_title or 'Unknown'} source:{chunk.document_name}]\n{sanitize_text(chunk.text)}"
         for chunk in chunks
     )
 
-    answer_language = language_name(language)
+    answer_language = selected_language
 
     intent_rule = (
         f'- The detected question section is "{intent}". Answer only from chunks with that section.\n'
@@ -57,6 +59,7 @@ IMPORTANT RULES:
   "This question is outside the scope of the uploaded document."
 - If the retrieved context does not directly answer the question, do not attempt to answer.
 - Answer ONLY what the user asked.
+- The final answer must be entirely in {answer_language}; do not mix Hindi, Telugu, and English labels.
 {intent_rule}- Ignore FAQ chunks unless the user explicitly asks an FAQ.
 - If the user asks for eligibility, return ONLY the eligibility criteria.
 - If the user asks for required documents, return ONLY the required documents.
@@ -85,7 +88,7 @@ Context:
 {context}
 
 Question:
-{question}
+{sanitize_text(question)}
 
 Answer:
 """

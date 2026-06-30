@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from backend.llm.answer_generator import generate_answer
 from backend.core.pydantic_compat import BaseModel
+from backend.localization.text_sanitizer import sanitize_text
 from backend.localization.translator import localize_items, translate
 from backend.retrieval.hybrid_search import detect_section_intent
 from backend.schemas.scheme import GroundedAnswer, RetrievedChunk
@@ -20,6 +21,7 @@ class QAResult(BaseModel):
 
 def run_qa_pipeline(question: str, document_id: int | None = None, language: str = "en", repo: Repository | None = None) -> QAResult:
     repo = repo or Repository()
+    question = sanitize_text(question)
     cached = repo.get_cached_response(document_id, question, language)
     if cached:
         return QAResult.model_validate(cached)
@@ -33,7 +35,7 @@ def run_qa_pipeline(question: str, document_id: int | None = None, language: str
     grounded: GroundedAnswer = generate_answer(question, chunks, confidence, language=language)
     repo.log_query(document_id, question, grounded, language)
     result = QAResult(
-        answer=grounded.answer,
+        answer=sanitize_text(grounded.answer),
         confidence=grounded.confidence,
         citations=[chunk.model_dump() for chunk in grounded.citations],
         reasoning=grounded.reasoning,
@@ -62,7 +64,7 @@ def _structured_section_answer(question: str, document_id: int | None, repo: Rep
         if _same_section(chunk.section_title, intent)
     ]
     citations = [_citation(chunk) for chunk in chunks[:3]]
-    answer = "\n".join(f"- {item}" for item in items[:10])
+    answer = sanitize_text("\n".join(f"- {item}" for item in items[:10]))
     return QAResult(
         answer=answer,
         confidence=1.0,

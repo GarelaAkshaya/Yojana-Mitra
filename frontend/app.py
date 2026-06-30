@@ -14,9 +14,10 @@ import streamlit as st
 
 from backend.localization.translator import translate
 from backend.storage.repository import Repository
+from frontend.components.chat_display import ICONS, render_chat_message, render_citations, render_home_feature
 from frontend.components.theme_loader import load_theme
 from frontend.components.language_buttons import language_buttons
-from frontend.services.chat_flow import answer_prompt, transcribe_audio
+from frontend.services.chat_flow import answer_question, transcribe_audio
 
 APP_DIR = Path(__file__).resolve().parent
 LOGO_PATH = APP_DIR / "static" / "images" / "logo.png"
@@ -45,25 +46,55 @@ def main() -> None:
     st.session_state.setdefault("home_question_input", "")
     language = st.session_state.get("language", "en")
 
-    st.sidebar.title(translate("navigation", language))
     st.sidebar.markdown(
-        """
-        Use the pages in the sidebar to:
-        - **Upload** your files
-        - **Process** your data
-        - **Chat** with the assistant
-        - View **History**
-        - Manage **Settings**
-        """
+        f"""
+        <div class="ym-sidebar-brand">
+          <div class="ym-sidebar-logo">YM</div>
+          <div>
+            <h2>{translate("app_title", language)}</h2>
+            <p>{translate("offline_secure", language)}</p>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.sidebar.markdown(
+        f"""
+        <div class="ym-sidebar-menu">
+          <div><span>{ICONS["documents"]}</span>{translate("upload", language)}</div>
+          <div><span>▣</span>{translate("processing_title", language)}</div>
+          <div><span>{ICONS["chat"]}</span>{translate("chat_tab", language)}</div>
+          <div><span>◷</span>{translate("history_title", language)}</div>
+          <div><span>⚙</span>{translate("settings_title", language)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    st.title(translate("welcome_title", language))
-    st.write(translate("welcome_body", language))
+    st.markdown(
+        f"""
+        <div class="page-hero home-hero">
+          <div>
+            <p class="eyebrow">Yojana Mitra</p>
+            <h1>{translate("welcome_title", language)}</h1>
+            <p>{translate("welcome_body", language)}</p>
+          </div>
+          <div class="hero-badge">{translate("offline_secure", language)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     language_buttons("home_language")
 
-    st.divider()
+    feature_cols = st.columns(3)
+    with feature_cols[0]:
+        render_home_feature(ICONS["documents"], translate("document", language), translate("home_upload", language))
+    with feature_cols[1]:
+        render_home_feature(ICONS["audio"], translate("voice_message", language), translate("type_message", language))
+    with feature_cols[2]:
+        render_home_feature(ICONS["structured"], translate("structured_data", language), translate("ask_question", language))
 
-    st.subheader(translate("home_upload", language))
+    st.markdown(f"<h2 class='ym-section-heading'>{translate('home_upload', language)}</h2>", unsafe_allow_html=True)
     uploaded_files = st.file_uploader(
         translate("choose_files", language),
         type=["pdf", "png", "jpg", "jpeg"],
@@ -76,7 +107,7 @@ def main() -> None:
         if st.button(translate("continue_processing", language), key="home_continue_processing"):
             st.switch_page("pages/2_processing.py")
 
-    st.subheader(translate("ask_question", language))
+    st.markdown(f"<h2 class='ym-section-heading'>{translate('ask_question', language)}</h2>", unsafe_allow_html=True)
 
     question_container = st.container()
     voice_container = st.container()
@@ -144,13 +175,13 @@ def main() -> None:
             st.warning(translate("empty_message", language))
             st.stop()
 
-        response = answer_prompt(prompt, selected_document_id, language)
-        st.session_state.setdefault("messages", []).append({"role": "user", "content": prompt})
-        st.session_state["messages"].append({"role": "assistant", "content": response})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        with st.chat_message("assistant"):
-            st.markdown(response)
+        result, response = answer_question(prompt, selected_document_id, language)
+        citations = result.citations if result else []
+        st.session_state.setdefault("messages", []).append({"role": "user", "content": prompt, "citations": []})
+        st.session_state["messages"].append({"role": "assistant", "content": response, "citations": citations})
+        render_chat_message("user", prompt, language)
+        render_chat_message("assistant", response, language)
+        render_citations(citations, language)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from backend.localization.text_sanitizer import sanitize_text
 from backend.speech.whisper_engine import WhisperEngine, WhisperModelUnavailableError
 
 
@@ -30,3 +31,31 @@ def test_whisper_cpp_bin_path_has_actionable_error(tmp_path: Path):
 
     with pytest.raises(WhisperModelUnavailableError, match="whisper.cpp .bin file"):
         engine._load()
+
+
+def test_transcribe_forces_selected_telugu_language(tmp_path: Path):
+    audio_path = tmp_path / "voice.wav"
+    audio_path.write_bytes(b"audio")
+    captured = {}
+
+    class Segment:
+        text = "తెలుగు ప్రశ్న"
+
+    class Model:
+        def transcribe(self, path: str, **kwargs):
+            captured.update(kwargs)
+            return [Segment()], object()
+
+    engine = WhisperEngine(tmp_path)
+    engine._model = Model()
+
+    transcript = engine.transcribe(audio_path, language="Telugu")
+
+    assert transcript == "తెలుగు ప్రశ్న"
+    assert captured["language"] == "te"
+    assert captured["task"] == "transcribe"
+    assert captured["condition_on_previous_text"] is False
+
+
+def test_sanitize_text_removes_corrupted_unicode():
+    assert sanitize_text("లాభాలు � ԱՂՄ ࿌") == "లాభాలు"

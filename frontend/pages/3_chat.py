@@ -9,8 +9,9 @@ import streamlit as st
 from backend.localization.translator import localize_items, localize_value, translate
 from backend.storage.repository import Repository
 from backend.structuring.section_utils import useful_items
+from frontend.components.chat_display import ICONS, render_chat_message, render_citations
 from frontend.components.theme_loader import load_theme
-from frontend.services.chat_flow import answer_prompt, transcribe_audio
+from frontend.services.chat_flow import answer_question, transcribe_audio
 
 
 def _render_items(title: str, items: list[str], icon: str, empty_text: str, language: str) -> None:
@@ -72,12 +73,15 @@ if document_options:
 else:
     st.warning(translate("upload_first", language))
 
-chat_tab, structured_tab = st.tabs([translate("chat_tab", language), translate("structured_data", language)])
+chat_tab, structured_tab = st.tabs(
+    [f'{ICONS["chat"]} {translate("chat_tab", language)}', f'{ICONS["structured"]} {translate("structured_data", language)}']
+)
 
 with chat_tab:
     for message in st.session_state["messages"]:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        render_chat_message(message["role"], message["content"], language)
+        if message.get("role") == "assistant":
+            render_citations(message.get("citations", []), language)
 
     question_container = st.container()
     voice_container = st.container()
@@ -128,15 +132,15 @@ with chat_tab:
             st.warning(translate("empty_message", language))
             st.stop()
 
-        st.session_state["messages"].append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        st.session_state["messages"].append({"role": "user", "content": prompt, "citations": []})
+        render_chat_message("user", prompt, language)
 
-        response = answer_prompt(prompt, selected_document_id, language)
+        result, response = answer_question(prompt, selected_document_id, language)
+        citations = result.citations if result else []
 
-        st.session_state["messages"].append({"role": "assistant", "content": response})
-        with st.chat_message("assistant"):
-            st.markdown(response)
+        st.session_state["messages"].append({"role": "assistant", "content": response, "citations": citations})
+        render_chat_message("assistant", response, language)
+        render_citations(citations, language)
 
         st.session_state["clear_chat_text_input"] = True
         st.rerun()
@@ -152,7 +156,7 @@ with structured_tab:
             st.markdown(
                 f"""
                 <div class="scheme-summary">
-                  <p class="eyebrow">{escape(translate("structured_data", language))}</p>
+                  <p class="eyebrow">{escape(ICONS["structured"])} {escape(translate("structured_data", language))}</p>
                   <h2>{escape(localize_value(details.get("scheme_name") or translate("not_specified_short", language), language))}</h2>
                   <div class="summary-grid">
                     <div><span>{escape(translate("category", language))}</span><strong>{escape(localize_value(details.get("category") or translate("not_specified_short", language), language))}</strong></div>
@@ -164,7 +168,7 @@ with structured_tab:
                 unsafe_allow_html=True,
             )
             empty_text = translate("not_specified_short", language)
-            _render_items(translate("benefits", language), details.get("benefits", []), "OK", empty_text, language)
-            _render_items(translate("eligibility", language), details.get("eligibility", []), "EL", empty_text, language)
-            _render_items(translate("required_documents", language), details.get("documents", []), "DOC", empty_text, language)
-            _render_items(translate("application_process", language), details.get("application_process", []), "GO", empty_text, language)
+            _render_items(translate("benefits", language), details.get("benefits", []), "₹", empty_text, language)
+            _render_items(translate("eligibility", language), details.get("eligibility", []), "✓", empty_text, language)
+            _render_items(translate("required_documents", language), details.get("documents", []), ICONS["documents"], empty_text, language)
+            _render_items(translate("application_process", language), details.get("application_process", []), "→", empty_text, language)

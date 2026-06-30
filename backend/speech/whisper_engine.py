@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from backend.core.config import get_settings
+from backend.localization.text_sanitizer import sanitize_text
+from backend.localization.translator import language_code
 
 
 class WhisperModelUnavailableError(RuntimeError):
@@ -61,5 +63,12 @@ class WhisperEngine:
             raise FileNotFoundError(f"Recorded audio file not found: {audio_path}")
         if audio_path.stat().st_size == 0:
             raise ValueError("Recorded audio file is empty.")
-        segments, _info = self._load().transcribe(str(audio_path), language=language)
-        return " ".join(segment.text.strip() for segment in segments if segment.text.strip())
+        forced_language = language_code(language) if language else None
+        segments, _info = self._load().transcribe(
+            str(audio_path),
+            language=forced_language,
+            task="transcribe",
+            condition_on_previous_text=False,
+            vad_filter=True,
+        )
+        return sanitize_text(" ".join(segment.text.strip() for segment in segments if segment.text.strip()))

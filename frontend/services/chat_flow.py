@@ -7,6 +7,7 @@ from uuid import uuid4
 import streamlit as st
 
 from backend.core.config import get_settings
+from backend.localization.text_sanitizer import sanitize_text
 from backend.localization.translator import language_code, translate
 from backend.pipeline.qa_pipeline import run_qa_pipeline
 from backend.speech.whisper_engine import WhisperEngine, WhisperModelUnavailableError
@@ -31,8 +32,9 @@ def save_audio_input(audio_value) -> Path:
 
 def transcribe_audio(audio_value, language: str) -> str:
     audio_path = save_audio_input(audio_value)
+    selected_language = language_code(language)
     try:
-        transcript = WhisperEngine().transcribe(audio_path, language=language_code(language)).strip()
+        transcript = WhisperEngine().transcribe(audio_path, language=selected_language).strip()
     except WhisperModelUnavailableError:
         logger.exception("Voice transcription model is unavailable for %s", audio_path)
         raise
@@ -44,24 +46,31 @@ def transcribe_audio(audio_value, language: str) -> str:
 
     if not transcript:
         raise ValueError("No speech was detected in the recording. Please try again.")
-    return transcript
+    return sanitize_text(transcript)
+
+
+def answer_question(prompt: str, selected_document_id: int | None, language: str):
+    selected_language = language_code(language)
+    clean_prompt = sanitize_text(prompt)
+    if selected_document_id is None:
+        return None, translate("need_document", selected_language)
+
+    with st.spinner(translate("searching", selected_language)):
+        try:
+            result = run_qa_pipeline(clean_prompt, document_id=selected_document_id, language=selected_language)
+            result.answer = sanitize_text(result.answer or translate("not_found", selected_language))
+            return result, result.answer
+        except Exception as exc:
+            logger.exception("Question answering failed")
+            return None, f"{translate('processing_failed', selected_language)}: {exc}"
 
 
 def answer_prompt(prompt: str, selected_document_id: int | None, language: str) -> str:
-    if selected_document_id is None:
-        return translate("need_document", language)
-
-    with st.spinner(translate("searching", language)):
-        try:
-            result = run_qa_pipeline(prompt, document_id=selected_document_id, language=language_code(language))
-            response = result.answer or translate("not_found", language)
-            if result.citations:
-                sources = ", ".join(
-                    f"{citation.get('document_name', 'document')} page {citation.get('page_number', 1)}"
-                    for citation in result.citations[:3]
-                )
-                response = f"{response}\n\n{translate('sources', language)}: {sources}"
-            return response
-        except Exception as exc:
-            logger.exception("Question answering failed")
-            return f"{translate('processing_failed', language)}: {exc}"
+    result, response = answer_question(prompt, selected_document_id, language)
+    if result and result.citations:
+        sources = ", ".join(
+            f"{citation.get('document_name', 'document')} {translate('page', language_code(language))} {citation.get('page_number', 1)}"
+            for citation in result.citations[:3]
+        )
+        return f"{response}\n\n{translate('sources', language)}: {sources}"
+    return response
