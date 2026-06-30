@@ -31,6 +31,8 @@ def test_chunk_text_keeps_government_scheme_sections_separate():
     assert "Benefits" in sections
     assert "Eligibility" in sections
     assert "FAQs" in sections
-    eligibility_chunk = next(chunk for chunk in chunks if chunk.section_title == "Eligibility")
+    eligibility_chunk = next(
+        chunk for chunk in chunks if chunk.section_title == "Eligibility"
+    )
     assert "Small and marginal farmers" in eligibility_chunk.text
     assert "payment fails" not in eligibility_chunk.text

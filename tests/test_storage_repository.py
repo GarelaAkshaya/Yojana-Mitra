@@ -14,7 +14,9 @@ def test_repository_round_trip(tmp_path):
         )
     )
     scheme_id = repo.save_scheme(document_id, Scheme(scheme_name="Sample Scheme"))
-    chunk_ids = repo.insert_chunks([Chunk(document_id=document_id, text="Eligibility income below Rs 200000")])
+    chunk_ids = repo.insert_chunks(
+        [Chunk(document_id=document_id, text="Eligibility income below Rs 200000")]
+    )
 
     assert document_id > 0
     assert scheme_id > 0

@@ -6,7 +6,9 @@ import unicodedata
 from backend.localization.translator import language_code
 
 
-CORRUPTED_TEXT_RE = re.compile(r"(?:\uFFFD|ԱՂՄ|࿌|[\u0700-\u074F\u0780-\u07BF\u0530-\u058F])+", re.U)
+CORRUPTED_TEXT_RE = re.compile(
+    r"(?:\uFFFD|ԱՂՄ|࿌|[\u0700-\u074F\u0780-\u07BF\u0530-\u058F])+", re.U
+)
 CONTROL_RE = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]")
 
 SCRIPT_RANGES = {

@@ -9,34 +9,112 @@ from backend.storage.repository import Repository
 
 
 SECTION_QUERY_ALIASES: dict[str, tuple[str, ...]] = {
-    "Eligibility": ("eligib", "eligible", "who can apply", "beneficiar", "income", "age", "पात्र", "योग्यता", "अर्ह", "అర్హ", "అర్హత"),
-    "Benefits": ("benefit", "amount", "assistance", "subsidy", "support", "लाभ", "लाब", "सहायता", "ప్రయోజ", "లాభ", "సహాయం"),
-    "Required Documents": ("document", "certificate", "proof", "papers", "दस्तावेज", "प्रमाण", "పత్ర", "సర్టిఫికెట్"),
-    "Application Process": ("apply", "application", "procedure", "registration", "submit", "आवेदन", "कैसे", "దరఖాస్తు", "ఎలా"),
+    "Eligibility": (
+        "eligib",
+        "eligible",
+        "who can apply",
+        "beneficiar",
+        "income",
+        "age",
+        "पात्र",
+        "योग्यता",
+        "अर्ह",
+        "అర్హ",
+        "అర్హత",
+    ),
+    "Benefits": (
+        "benefit",
+        "amount",
+        "assistance",
+        "subsidy",
+        "support",
+        "लाभ",
+        "लाब",
+        "सहायता",
+        "ప్రయోజ",
+        "లాభ",
+        "సహాయం",
+    ),
+    "Required Documents": (
+        "document",
+        "certificate",
+        "proof",
+        "papers",
+        "दस्तावेज",
+        "प्रमाण",
+        "పత్ర",
+        "సర్టిఫికెట్",
+    ),
+    "Application Process": (
+        "apply",
+        "application",
+        "procedure",
+        "registration",
+        "submit",
+        "आवेदन",
+        "कैसे",
+        "దరఖాస్తు",
+        "ఎలా",
+    ),
     "Objective": ("objective", "purpose", "aim", "उद्देश्य", "లక్ష్యం", "ఉద్దేశ"),
-    "Important Dates": ("last date", "deadline", "important date", "अंतिम", "तारीख", "చివరి", "తేదీ"),
+    "Important Dates": (
+        "last date",
+        "deadline",
+        "important date",
+        "अंतिम",
+        "तारीख",
+        "చివరి",
+        "తేదీ",
+    ),
     "FAQs": ("faq", "frequently asked", "question", "सवाल", "प्रश्न", "ప్రశ్న"),
-    "Contact Information": ("contact", "helpline", "phone", "email", "website", "संपर्क", "हेल्पलाइन", "సంప్రద", "హెల్ప్"),
+    "Contact Information": (
+        "contact",
+        "helpline",
+        "phone",
+        "email",
+        "website",
+        "संपर्क",
+        "हेल्पलाइन",
+        "సంప్రద",
+        "హెల్ప్",
+    ),
 }
 
 
-def rebuild_vector_index(repo: Repository | None = None, encoder: LocalEncoder | None = None) -> int:
+def rebuild_vector_index(
+    repo: Repository | None = None, encoder: LocalEncoder | None = None
+) -> int:
     repo = repo or Repository()
     encoder = encoder or LocalEncoder()
     chunks = repo.get_chunks()
     vectors = encoder.encode([chunk.text for chunk in chunks]) if chunks else []
-    VectorIndex().save_vectors({int(chunk.id): vector for chunk, vector in zip(chunks, vectors, strict=True) if chunk.id})
+    VectorIndex().save_vectors(
+        {
+            int(chunk.id): vector
+            for chunk, vector in zip(chunks, vectors, strict=True)
+            if chunk.id
+        }
+    )
     for chunk, vector in zip(chunks, vectors, strict=True):
         if chunk.id:
             repo.save_embedding(chunk.id, vector, encoder.model_name)
     return len(chunks)
 
 
-def hybrid_search(query: str, document_id: int | None = None, top_k: int = 5, repo: Repository | None = None) -> list[RetrievedChunk]:
+def hybrid_search(
+    query: str,
+    document_id: int | None = None,
+    top_k: int = 5,
+    repo: Repository | None = None,
+) -> list[RetrievedChunk]:
     repo = repo or Repository()
     target_section = detect_section_intent(query)
     keyword_results = repo.search_fts(query, limit=top_k * 2, document_id=document_id)
-    all_chunks = {chunk.id: chunk for chunk in repo.get_chunks(document_id=document_id) if chunk.id is not None}
+    all_chunks = {
+        chunk.id: chunk
+        for chunk in repo.get_chunks(document_id=document_id)
+        if chunk.id is not None
+    }
 
     query_vector = LocalEncoder().encode([query])[0]
     vector_hits = VectorIndex().search(query_vector, top_k=top_k * 2)
@@ -44,24 +122,38 @@ def hybrid_search(query: str, document_id: int | None = None, top_k: int = 5, re
     fused: dict[int, float] = {}
     for rank, chunk in enumerate(keyword_results):
         if chunk.id is not None:
-            fused[chunk.id] = fused.get(chunk.id, 0.0) + _section_weight(chunk, target_section) * (1.0 / (rank + 1))
+            fused[chunk.id] = fused.get(chunk.id, 0.0) + _section_weight(
+                chunk, target_section
+            ) * (1.0 / (rank + 1))
     for rank, (chunk_id, score) in enumerate(vector_hits):
         if chunk_id in all_chunks:
             chunk = all_chunks[chunk_id]
-            fused[chunk_id] = fused.get(chunk_id, 0.0) + _section_weight(chunk, target_section) * (max(score, 0.0) + 0.25 / (rank + 1))
+            fused[chunk_id] = fused.get(chunk_id, 0.0) + _section_weight(
+                chunk, target_section
+            ) * (max(score, 0.0) + 0.25 / (rank + 1))
 
     if not fused:
-        query_terms = {_term_key(term) for term in query.split() if len(_term_key(term)) > 2}
+        query_terms = {
+            _term_key(term) for term in query.split() if len(_term_key(term)) > 2
+        }
         for chunk_id, chunk in all_chunks.items():
             text_terms = {_term_key(term) for term in chunk.text.split()}
             overlap = len(query_terms & text_terms)
             if overlap:
-                fused[chunk_id] = min(_section_weight(chunk, target_section) * (0.2 + overlap / max(len(query_terms), 1)), 1.0)
+                fused[chunk_id] = min(
+                    _section_weight(chunk, target_section)
+                    * (0.2 + overlap / max(len(query_terms), 1)),
+                    1.0,
+                )
 
     results: list[RetrievedChunk] = []
     ranked = sorted(fused.items(), key=lambda item: item[1], reverse=True)
     if target_section:
-        matching = [(chunk_id, score) for chunk_id, score in ranked if _same_section(all_chunks[chunk_id].section_title, target_section)]
+        matching = [
+            (chunk_id, score)
+            for chunk_id, score in ranked
+            if _same_section(all_chunks[chunk_id].section_title, target_section)
+        ]
         ranked = matching or ranked
     for chunk_id, score in ranked[:top_k]:
         chunk = all_chunks.get(chunk_id)

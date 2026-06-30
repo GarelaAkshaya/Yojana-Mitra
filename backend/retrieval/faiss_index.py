@@ -22,7 +22,9 @@ class VectorIndex:
         data = json.loads(self.vectors_path.read_text(encoding="utf-8"))
         return {int(key): value for key, value in data.items()}
 
-    def search(self, query_vector: list[float], top_k: int = 5) -> list[tuple[int, float]]:
+    def search(
+        self, query_vector: list[float], top_k: int = 5
+    ) -> list[tuple[int, float]]:
         vectors = self.load_vectors()
         if not vectors:
             return []

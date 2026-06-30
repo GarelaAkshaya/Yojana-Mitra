@@ -50,7 +50,9 @@ class WhisperEngine:
                     "faster-whisper is not installed. Install requirements.txt, then try voice input again."
                 ) from exc
             try:
-                self._model = WhisperModel(str(self.model_path), device="cpu", compute_type="int8")
+                self._model = WhisperModel(
+                    str(self.model_path), device="cpu", compute_type="int8"
+                )
             except Exception as exc:
                 raise WhisperModelUnavailableError(
                     f"Whisper model could not be loaded from {self.model_path}: {exc}"
@@ -71,4 +73,8 @@ class WhisperEngine:
             condition_on_previous_text=False,
             vad_filter=True,
         )
-        return sanitize_text(" ".join(segment.text.strip() for segment in segments if segment.text.strip()))
+        return sanitize_text(
+            " ".join(
+                segment.text.strip() for segment in segments if segment.text.strip()
+            )
+        )

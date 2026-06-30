@@ -42,7 +42,9 @@ else:
             try:
                 result = run_ingestion_pipeline(target_path)
             except Exception as exc:
-                st.error(f"{translate('process_failed', language, name=file.name)}: {exc}")
+                st.error(
+                    f"{translate('process_failed', language, name=file.name)}: {exc}"
+                )
                 st.stop()
             processed_documents.append(result.model_dump())
             processed_keys.add(upload_key)
@@ -56,9 +58,19 @@ else:
             st.subheader(document["scheme"]["scheme_name"])
             st.write(f"Pages Extracted: {document.get('pages_extracted', 0)}")
             st.write(f"Chunks Created: {document.get('chunks_created', 0)}")
-            st.write("Structured Information Extracted ✓" if document.get("structured_extracted") else "Structured Information Extracted")
-            st.write("SQLite Saved ✓" if document.get("sqlite_saved") else "SQLite Saved")
-            st.write("Vector Index Ready ✓" if document.get("vector_index_ready") else "Vector Index Ready")
+            st.write(
+                "Structured Information Extracted ✓"
+                if document.get("structured_extracted")
+                else "Structured Information Extracted"
+            )
+            st.write(
+                "SQLite Saved ✓" if document.get("sqlite_saved") else "SQLite Saved"
+            )
+            st.write(
+                "Vector Index Ready ✓"
+                if document.get("vector_index_ready")
+                else "Vector Index Ready"
+            )
 
     if st.button(translate("continue_chat", language)):
         st.switch_page("pages/3_chat.py")

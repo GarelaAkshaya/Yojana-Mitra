@@ -19,7 +19,12 @@ class QAResult(BaseModel):
     refused: bool = False
 
 
-def run_qa_pipeline(question: str, document_id: int | None = None, language: str = "en", repo: Repository | None = None) -> QAResult:
+def run_qa_pipeline(
+    question: str,
+    document_id: int | None = None,
+    language: str = "en",
+    repo: Repository | None = None,
+) -> QAResult:
     repo = repo or Repository()
     question = sanitize_text(question)
     cached = repo.get_cached_response(document_id, question, language)
@@ -28,11 +33,15 @@ def run_qa_pipeline(question: str, document_id: int | None = None, language: str
 
     structured = _structured_section_answer(question, document_id, repo, language)
     if structured:
-        repo.set_cached_response(document_id, question, structured.model_dump(), language)
+        repo.set_cached_response(
+            document_id, question, structured.model_dump(), language
+        )
         return structured
 
     chunks, confidence = retrieve_context(question, document_id=document_id, repo=repo)
-    grounded: GroundedAnswer = generate_answer(question, chunks, confidence, language=language)
+    grounded: GroundedAnswer = generate_answer(
+        question, chunks, confidence, language=language
+    )
     repo.log_query(document_id, question, grounded, language)
     result = QAResult(
         answer=sanitize_text(grounded.answer),
@@ -45,7 +54,9 @@ def run_qa_pipeline(question: str, document_id: int | None = None, language: str
     return result
 
 
-def _structured_section_answer(question: str, document_id: int | None, repo: Repository, language: str = "en") -> QAResult | None:
+def _structured_section_answer(
+    question: str, document_id: int | None, repo: Repository, language: str = "en"
+) -> QAResult | None:
     if document_id is None:
         return None
     intent = detect_section_intent(question)
@@ -79,4 +90,6 @@ def _citation(chunk: RetrievedChunk) -> dict:
 
 
 def _same_section(left: str, right: str) -> bool:
-    return "".join(ch for ch in left.lower() if ch.isalnum()) == "".join(ch for ch in right.lower() if ch.isalnum())
+    return "".join(ch for ch in left.lower() if ch.isalnum()) == "".join(
+        ch for ch in right.lower() if ch.isalnum()
+    )

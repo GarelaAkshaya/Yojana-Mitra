@@ -4,7 +4,11 @@ Reusable component: native language buttons.
 
 import streamlit as st
 
-from backend.localization.translator import NATIVE_LANGUAGE_NAMES, language_code, translate
+from backend.localization.translator import (
+    NATIVE_LANGUAGE_NAMES,
+    language_code,
+    translate,
+)
 
 
 def language_buttons(key_prefix: str = "language") -> str:

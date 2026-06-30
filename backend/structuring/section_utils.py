@@ -5,7 +5,13 @@ import re
 from backend.schemas.scheme import RetrievedChunk
 
 
-PLACEHOLDERS = {"", "not specified in document", "not specified", "दस्तावेज़ में निर्दिष्ट नहीं", "పత్రంలో పేర్కొనలేదు"}
+PLACEHOLDERS = {
+    "",
+    "not specified in document",
+    "not specified",
+    "दस्तावेज़ में निर्दिष्ट नहीं",
+    "పత్రంలో పేర్కొనలేదు",
+}
 
 SECTION_TO_DETAIL_KEY = {
     "Benefits": "benefits",
@@ -16,12 +22,59 @@ SECTION_TO_DETAIL_KEY = {
 }
 
 SECTION_EQUIVALENTS = {
-    "Benefits": ("benefit", "benefits", "assistance", "financial assistance", "subsidy", "लाभ", "लाब", "सहायता", "ప్రయోజనాలు", "లాభాలు", "సహాయం"),
-    "Eligibility": ("eligibility", "eligible", "who can apply", "beneficiaries", "पात्रता", "योग्यता", "అర్హత", "అర్హులు"),
-    "Required Documents": ("required documents", "documents", "documents required", "document required", "आवश्यक दस्तावेज", "दस्तावेज", "అవసరమైన పత్రాలు", "పత్రాలు"),
-    "Application Process": ("application process", "application", "how to apply", "procedure", "आवेदन प्रक्रिया", "कैसे आवेदन", "దరఖాస్తు ప్రక్రియ", "ఎలా దరఖాస్తు"),
+    "Benefits": (
+        "benefit",
+        "benefits",
+        "assistance",
+        "financial assistance",
+        "subsidy",
+        "लाभ",
+        "लाब",
+        "सहायता",
+        "ప్రయోజనాలు",
+        "లాభాలు",
+        "సహాయం",
+    ),
+    "Eligibility": (
+        "eligibility",
+        "eligible",
+        "who can apply",
+        "beneficiaries",
+        "पात्रता",
+        "योग्यता",
+        "అర్హత",
+        "అర్హులు",
+    ),
+    "Required Documents": (
+        "required documents",
+        "documents",
+        "documents required",
+        "document required",
+        "आवश्यक दस्तावेज",
+        "दस्तावेज",
+        "అవసరమైన పత్రాలు",
+        "పత్రాలు",
+    ),
+    "Application Process": (
+        "application process",
+        "application",
+        "how to apply",
+        "procedure",
+        "आवेदन प्रक्रिया",
+        "कैसे आवेदन",
+        "దరఖాస్తు ప్రక్రియ",
+        "ఎలా దరఖాస్తు",
+    ),
     "Objective": ("objective", "purpose", "उद्देश्य", "లక్ష్యం", "ఉద్దేశ్యం"),
-    "FAQs": ("faq", "faqs", "frequently asked questions", "प्रश्न", "సवाल", "ప్రశ్నలు", "తరచుగా అడిగే ప్రశ్నలు"),
+    "FAQs": (
+        "faq",
+        "faqs",
+        "frequently asked questions",
+        "प्रश्न",
+        "సवाल",
+        "ప్రశ్నలు",
+        "తరచుగా అడిగే ప్రశ్నలు",
+    ),
 }
 
 NEXT_SECTION_RE = re.compile(
@@ -45,14 +98,18 @@ def is_useful_text(value: object) -> bool:
     return isinstance(value, str) and value.strip().lower() not in PLACEHOLDERS
 
 
-def items_from_chunks(chunks: list[RetrievedChunk], section_title: str, limit: int = 12) -> list[str]:
+def items_from_chunks(
+    chunks: list[RetrievedChunk], section_title: str, limit: int = 12
+) -> list[str]:
     items: list[str] = []
     seen: set[str] = set()
     for chunk in chunks:
         if same_section(chunk.section_title, section_title):
             candidates = _items_from_section_text(chunk.text, section_title)
         elif not chunk.section_title:
-            candidates = _items_from_section_text(chunk.text, section_title, allow_fallback=False)
+            candidates = _items_from_section_text(
+                chunk.text, section_title, allow_fallback=False
+            )
         else:
             continue
         for item in candidates:
@@ -65,12 +122,16 @@ def items_from_chunks(chunks: list[RetrievedChunk], section_title: str, limit: i
     return items
 
 
-def section_text_from_chunks(chunks: list[RetrievedChunk], section_title: str, limit: int = 8) -> str:
+def section_text_from_chunks(
+    chunks: list[RetrievedChunk], section_title: str, limit: int = 8
+) -> str:
     items = items_from_chunks(chunks, section_title, limit=limit)
     return "\n".join(f"- {item}" for item in items)
 
 
-def _items_from_section_text(text: str, section_title: str, allow_fallback: bool = True) -> list[str]:
+def _items_from_section_text(
+    text: str, section_title: str, allow_fallback: bool = True
+) -> list[str]:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     items: list[str] = []
     capture = False

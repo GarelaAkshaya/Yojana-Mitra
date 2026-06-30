@@ -34,7 +34,9 @@ def transcribe_audio(audio_value, language: str) -> str:
     audio_path = save_audio_input(audio_value)
     selected_language = language_code(language)
     try:
-        transcript = WhisperEngine().transcribe(audio_path, language=selected_language).strip()
+        transcript = (
+            WhisperEngine().transcribe(audio_path, language=selected_language).strip()
+        )
     except WhisperModelUnavailableError:
         logger.exception("Voice transcription model is unavailable for %s", audio_path)
         raise
@@ -57,8 +59,14 @@ def answer_question(prompt: str, selected_document_id: int | None, language: str
 
     with st.spinner(translate("searching", selected_language)):
         try:
-            result = run_qa_pipeline(clean_prompt, document_id=selected_document_id, language=selected_language)
-            result.answer = sanitize_text(result.answer or translate("not_found", selected_language))
+            result = run_qa_pipeline(
+                clean_prompt,
+                document_id=selected_document_id,
+                language=selected_language,
+            )
+            result.answer = sanitize_text(
+                result.answer or translate("not_found", selected_language)
+            )
             return result, result.answer
         except Exception as exc:
             logger.exception("Question answering failed")

@@ -13,6 +13,11 @@ def retrieve_context(
     repo: Repository | None = None,
 ) -> tuple[list[RetrievedChunk], float]:
     settings = get_settings()
-    chunks = hybrid_search(question, document_id=document_id, top_k=top_k or settings.retrieval.top_k, repo=repo)
+    chunks = hybrid_search(
+        question,
+        document_id=document_id,
+        top_k=top_k or settings.retrieval.top_k,
+        repo=repo,
+    )
     confidence = max((chunk.score for chunk in chunks), default=0.0)
     return chunks, confidence

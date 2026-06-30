@@ -7,13 +7,77 @@ from backend.structuring.normalizer import normalize_text, split_list_block
 
 
 SECTION_ALIASES = {
-    "eligibility": ["eligibility", "eligible", "who can apply", "beneficiaries", "पात्रता", "योग्यता", "कौन आवेदन कर सकता", "अर्हता", "అర్హత", "అర్హులు", "ఎవరు దరఖాస్తు"],
-    "benefits": ["benefits", "assistance", "financial assistance", "subsidy", "लाभ", "लाब", "सहायता", "फायदे", "ప్రయోజనాలు", "లాభాలు", "సహాయం", "సబ్సిడీ"],
-    "documents": ["documents", "required documents", "documents required", "आवश्यक दस्तावेज", "दस्तावेज", "प्रमाण पत्र", "అవసరమైన పత్రాలు", "పత్రాలు", "ధృవపత్రాలు"],
-    "application_process": ["application process", "how to apply", "procedure", "आवेदन प्रक्रिया", "कैसे आवेदन", "प्रक्रिया", "దరఖాస్తు ప్రక్రియ", "ఎలా దరఖాస్తు", "విధానం"],
-    "important_dates": ["important dates", "last date", "deadline", "महत्वपूर्ण तिथियां", "अंतिम तिथि", "तारीख", "ముఖ్యమైన తేదీలు", "చివరి తేదీ", "గడువు"],
+    "eligibility": [
+        "eligibility",
+        "eligible",
+        "who can apply",
+        "beneficiaries",
+        "पात्रता",
+        "योग्यता",
+        "कौन आवेदन कर सकता",
+        "अर्हता",
+        "అర్హత",
+        "అర్హులు",
+        "ఎవరు దరఖాస్తు",
+    ],
+    "benefits": [
+        "benefits",
+        "assistance",
+        "financial assistance",
+        "subsidy",
+        "लाभ",
+        "लाब",
+        "सहायता",
+        "फायदे",
+        "ప్రయోజనాలు",
+        "లాభాలు",
+        "సహాయం",
+        "సబ్సిడీ",
+    ],
+    "documents": [
+        "documents",
+        "required documents",
+        "documents required",
+        "आवश्यक दस्तावेज",
+        "दस्तावेज",
+        "प्रमाण पत्र",
+        "అవసరమైన పత్రాలు",
+        "పత్రాలు",
+        "ధృవపత్రాలు",
+    ],
+    "application_process": [
+        "application process",
+        "how to apply",
+        "procedure",
+        "आवेदन प्रक्रिया",
+        "कैसे आवेदन",
+        "प्रक्रिया",
+        "దరఖాస్తు ప్రక్రియ",
+        "ఎలా దరఖాస్తు",
+        "విధానం",
+    ],
+    "important_dates": [
+        "important dates",
+        "last date",
+        "deadline",
+        "महत्वपूर्ण तिथियां",
+        "अंतिम तिथि",
+        "तारीख",
+        "ముఖ్యమైన తేదీలు",
+        "చివరి తేదీ",
+        "గడువు",
+    ],
     "objective": ["objective", "purpose", "उद्देश्य", "लक्ष्य", "లక్ష్యం", "ఉద్దేశ్యం"],
-    "faq": ["faq", "faqs", "frequently asked questions", "प्रश्न", "सवाल", "अक्सर पूछे जाने वाले प्रश्न", "ప్రశ్నలు", "తరచుగా అడిగే ప్రశ్నలు"],
+    "faq": [
+        "faq",
+        "faqs",
+        "frequently asked questions",
+        "प्रश्न",
+        "सवाल",
+        "अक्सर पूछे जाने वाले प्रश्न",
+        "ప్రశ్నలు",
+        "తరచుగా అడిగే ప్రశ్నలు",
+    ],
     "contact": ["contact", "helpline", "संपर्क", "हेल्पलाइन", "సంప్రదింపు", "హెల్ప్‌లైన్"],
 }
 
@@ -21,12 +85,22 @@ SECTION_ALIASES = {
 def extract_scheme_fields(text: str) -> Scheme:
     normalized = normalize_text(text)
     sections = _sections(normalized)
-    scheme_name = _first_match(normalized, [r"scheme name\s*[:\-]\s*(.+)", r"^(.{5,90}Yojana.{0,80})$"])
-    department = _first_match(normalized, [r"department\s*[:\-]\s*(.+)", r"ministry\s*[:\-]\s*(.+)"])
-    state = _first_match(normalized, [r"state\s*[:\-]\s*(.+)", r"government of\s+([A-Za-z ]+)"])
+    scheme_name = _first_match(
+        normalized, [r"scheme name\s*[:\-]\s*(.+)", r"^(.{5,90}Yojana.{0,80})$"]
+    )
+    department = _first_match(
+        normalized, [r"department\s*[:\-]\s*(.+)", r"ministry\s*[:\-]\s*(.+)"]
+    )
+    state = _first_match(
+        normalized, [r"state\s*[:\-]\s*(.+)", r"government of\s+([A-Za-z ]+)"]
+    )
     contact = ContactInfo(
         phone=_first_match(normalized, [r"(\+?\d[\d\-\s]{7,}\d)"], default=""),
-        email=_first_match(normalized, [r"([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})"], default=""),
+        email=_first_match(
+            normalized,
+            [r"([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})"],
+            default="",
+        ),
         website=_first_match(normalized, [r"(https?://\S+|www\.\S+)"], default=""),
     )
     summary = _summary(normalized)
@@ -50,7 +124,9 @@ def extract_scheme_fields(text: str) -> Scheme:
         benefits=split_list_block(_single_section(sections, "benefits")),
         documents=split_list_block(_single_section(sections, "documents")),
         important_dates=split_list_block(_single_section(sections, "important_dates")),
-        application_process=split_list_block(_single_section(sections, "application_process")),
+        application_process=split_list_block(
+            _single_section(sections, "application_process")
+        ),
         faq=split_list_block(_single_section(sections, "faq")),
         contact=contact,
         summary=summary,
@@ -108,7 +184,9 @@ def _title_from_text(text: str) -> str:
 
 def _summary(text: str) -> str:
     sentences = re.split(r"(?<=[.!?])\s+", text)
-    summary = " ".join(sentence.strip() for sentence in sentences[:2] if sentence.strip())
+    summary = " ".join(
+        sentence.strip() for sentence in sentences[:2] if sentence.strip()
+    )
     return summary[:500] if summary else "Not specified in document"
 
 

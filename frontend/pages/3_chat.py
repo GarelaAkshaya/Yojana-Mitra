@@ -9,19 +9,32 @@ import streamlit as st
 from backend.localization.translator import localize_items, localize_value, translate
 from backend.storage.repository import Repository
 from backend.structuring.section_utils import useful_items
-from frontend.components.chat_display import ICONS, render_chat_message, render_citations
+from frontend.components.chat_display import (
+    ICONS,
+    render_chat_message,
+    render_citations,
+)
 from frontend.components.theme_loader import load_theme
 from frontend.services.chat_flow import answer_question, transcribe_audio
 
 
-def _render_items(title: str, items: list[str], icon: str, empty_text: str, language: str) -> None:
+def _render_items(
+    title: str, items: list[str], icon: str, empty_text: str, language: str
+) -> None:
     items = localize_items(useful_items(items), language)
-    st.markdown(f"<div class='section-card'><div class='section-title'><span>{escape(icon)}</span>{escape(title)}</div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='section-card'><div class='section-title'><span>{escape(icon)}</span>{escape(title)}</div>",
+        unsafe_allow_html=True,
+    )
     if not items:
-        st.markdown(f"<p class='muted'>{escape(empty_text)}</p></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<p class='muted'>{escape(empty_text)}</p></div>", unsafe_allow_html=True
+        )
         return
     for item in items:
-        st.markdown(f"<div class='section-item'>{escape(item)}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='section-item'>{escape(item)}</div>", unsafe_allow_html=True
+        )
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -67,14 +80,22 @@ if document_options:
     default_index = 0
     if previous_id in document_options.values():
         default_index = list(document_options.values()).index(previous_id)
-    selected_label = st.selectbox(translate("document", language), labels, index=default_index, key="chat_document_select")
+    selected_label = st.selectbox(
+        translate("document", language),
+        labels,
+        index=default_index,
+        key="chat_document_select",
+    )
     selected_document_id = document_options[selected_label]
     st.session_state["selected_document_id"] = selected_document_id
 else:
     st.warning(translate("upload_first", language))
 
 chat_tab, structured_tab = st.tabs(
-    [f'{ICONS["chat"]} {translate("chat_tab", language)}', f'{ICONS["structured"]} {translate("structured_data", language)}']
+    [
+        f"{ICONS['chat']} {translate('chat_tab', language)}",
+        f"{ICONS['structured']} {translate('structured_data', language)}",
+    ]
 )
 
 with chat_tab:
@@ -104,7 +125,9 @@ with chat_tab:
         if st.session_state.get("chat_transcribed_audio_id") != audio_id:
             st.caption(translate("recorded", language))
             try:
-                st.session_state["chat_text_input"] = transcribe_audio(audio_value, language)
+                st.session_state["chat_text_input"] = transcribe_audio(
+                    audio_value, language
+                )
                 st.session_state["chat_transcribed_audio_id"] = audio_id
                 st.session_state["chat_auto_submit_voice"] = True
                 st.success(translate("transcribed", language))
@@ -122,9 +145,13 @@ with chat_tab:
                 placeholder=translate("type_message", language),
             )
         with send_column:
-            send_clicked = st.button(translate("send", language), use_container_width=True)
+            send_clicked = st.button(
+                translate("send", language), use_container_width=True
+            )
 
-    send_requested = send_clicked or st.session_state.pop("chat_auto_submit_voice", False)
+    send_requested = send_clicked or st.session_state.pop(
+        "chat_auto_submit_voice", False
+    )
     if send_requested:
         prompt = st.session_state.get("chat_text_input", "").strip()
 
@@ -132,13 +159,17 @@ with chat_tab:
             st.warning(translate("empty_message", language))
             st.stop()
 
-        st.session_state["messages"].append({"role": "user", "content": prompt, "citations": []})
+        st.session_state["messages"].append(
+            {"role": "user", "content": prompt, "citations": []}
+        )
         render_chat_message("user", prompt, language)
 
         result, response = answer_question(prompt, selected_document_id, language)
         citations = result.citations if result else []
 
-        st.session_state["messages"].append({"role": "assistant", "content": response, "citations": citations})
+        st.session_state["messages"].append(
+            {"role": "assistant", "content": response, "citations": citations}
+        )
         render_chat_message("assistant", response, language)
         render_citations(citations, language)
 
@@ -168,7 +199,31 @@ with structured_tab:
                 unsafe_allow_html=True,
             )
             empty_text = translate("not_specified_short", language)
-            _render_items(translate("benefits", language), details.get("benefits", []), "₹", empty_text, language)
-            _render_items(translate("eligibility", language), details.get("eligibility", []), "✓", empty_text, language)
-            _render_items(translate("required_documents", language), details.get("documents", []), ICONS["documents"], empty_text, language)
-            _render_items(translate("application_process", language), details.get("application_process", []), "→", empty_text, language)
+            _render_items(
+                translate("benefits", language),
+                details.get("benefits", []),
+                "₹",
+                empty_text,
+                language,
+            )
+            _render_items(
+                translate("eligibility", language),
+                details.get("eligibility", []),
+                "✓",
+                empty_text,
+                language,
+            )
+            _render_items(
+                translate("required_documents", language),
+                details.get("documents", []),
+                ICONS["documents"],
+                empty_text,
+                language,
+            )
+            _render_items(
+                translate("application_process", language),
+                details.get("application_process", []),
+                "→",
+                empty_text,
+                language,
+            )

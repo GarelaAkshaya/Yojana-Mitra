@@ -16,7 +16,9 @@ class OCREngine:
             try:
                 import easyocr
             except ImportError as exc:
-                raise RuntimeError("EasyOCR is required for OCR. Install requirements.txt first.") from exc
+                raise RuntimeError(
+                    "EasyOCR is required for OCR. Install requirements.txt first."
+                ) from exc
             self._reader = easyocr.Reader(self.languages, gpu=False, verbose=False)
         return self._reader
 
@@ -46,7 +48,9 @@ class OCREngine:
                 pix.save(temp_png)
                 try:
                     rows = reader.readtext(str(temp_png), detail=0, paragraph=True)
-                    text = "\n".join(str(row).strip() for row in rows if str(row).strip())
+                    text = "\n".join(
+                        str(row).strip() for row in rows if str(row).strip()
+                    )
                     pages.append(PageText(page_number=page_index, text=text))
                 finally:
                     temp_png.unlink(missing_ok=True)

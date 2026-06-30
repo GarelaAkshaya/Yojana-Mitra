@@ -43,7 +43,10 @@ except ImportError:
             return cls(**payload)
 
         def model_dump(self) -> dict[str, Any]:
-            return {name: _dump_value(getattr(self, name)) for name in _all_annotations(type(self))}
+            return {
+                name: _dump_value(getattr(self, name))
+                for name in _all_annotations(type(self))
+            }
 
         def model_dump_json(self) -> str:
             return json.dumps(self.model_dump(), ensure_ascii=False)
@@ -64,7 +67,11 @@ def _coerce_value(annotation: Any, value: Any) -> Any:
         return value
     if annotation is Path and isinstance(value, str):
         return Path(value)
-    if isinstance(annotation, type) and issubclass(annotation, BaseModel) and isinstance(value, dict):
+    if (
+        isinstance(annotation, type)
+        and issubclass(annotation, BaseModel)
+        and isinstance(value, dict)
+    ):
         return annotation.model_validate(value)
     origin = get_origin(annotation)
     if origin is list and value is None:

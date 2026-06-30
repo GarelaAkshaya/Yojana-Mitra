@@ -8,10 +8,22 @@ from backend.storage.repository import Repository
 def test_qa_pipeline_returns_grounded_fallback(tmp_path):
     repo = Repository(DatabaseManager(tmp_path / "test.sqlite3"))
     document_id = repo.create_document(
-        DocumentRecord(filename="scheme.txt", file_path="scheme.txt", file_type="txt", checksum="qa123")
+        DocumentRecord(
+            filename="scheme.txt",
+            file_path="scheme.txt",
+            file_type="txt",
+            checksum="qa123",
+        )
     )
     repo.save_scheme(document_id, Scheme(scheme_name="Income Support"))
-    repo.insert_chunks([Chunk(document_id=document_id, text="Eligibility: Annual income below Rs 200000.")])
+    repo.insert_chunks(
+        [
+            Chunk(
+                document_id=document_id,
+                text="Eligibility: Annual income below Rs 200000.",
+            )
+        ]
+    )
     rebuild_vector_index(repo)
 
     result = run_qa_pipeline("Who is eligible?", document_id=document_id, repo=repo)
@@ -23,7 +35,12 @@ def test_qa_pipeline_returns_grounded_fallback(tmp_path):
 def test_hybrid_search_prefers_requested_section_over_faq(tmp_path):
     repo = Repository(DatabaseManager(tmp_path / "test.sqlite3"))
     document_id = repo.create_document(
-        DocumentRecord(filename="scheme.txt", file_path="scheme.txt", file_type="txt", checksum="qa456")
+        DocumentRecord(
+            filename="scheme.txt",
+            file_path="scheme.txt",
+            file_type="txt",
+            checksum="qa456",
+        )
     )
     repo.save_scheme(document_id, Scheme(scheme_name="Income Support"))
     repo.insert_chunks(
@@ -44,7 +61,9 @@ def test_hybrid_search_prefers_requested_section_over_faq(tmp_path):
     )
     rebuild_vector_index(repo)
 
-    results = hybrid_search("What is the eligibility?", document_id=document_id, repo=repo)
+    results = hybrid_search(
+        "What is the eligibility?", document_id=document_id, repo=repo
+    )
 
     assert results
     assert results[0].section_title == "Eligibility"
@@ -54,11 +73,20 @@ def test_hybrid_search_prefers_requested_section_over_faq(tmp_path):
 def test_structured_answer_handles_hindi_benefit_question(tmp_path):
     repo = Repository(DatabaseManager(tmp_path / "test.sqlite3"))
     document_id = repo.create_document(
-        DocumentRecord(filename="scheme.txt", file_path="scheme.txt", file_type="txt", checksum="qa789")
+        DocumentRecord(
+            filename="scheme.txt",
+            file_path="scheme.txt",
+            file_type="txt",
+            checksum="qa789",
+        )
     )
-    repo.save_scheme(document_id, Scheme(scheme_name="Skill Scheme", benefits=["निःशुल्क प्रशिक्षण"]))
+    repo.save_scheme(
+        document_id, Scheme(scheme_name="Skill Scheme", benefits=["निःशुल्क प्रशिक्षण"])
+    )
 
-    result = run_qa_pipeline("लाब क्या है", document_id=document_id, language="hi", repo=repo)
+    result = run_qa_pipeline(
+        "लाब क्या है", document_id=document_id, language="hi", repo=repo
+    )
 
     assert "निःशुल्क प्रशिक्षण" in result.answer
     assert not result.refused
@@ -67,11 +95,20 @@ def test_structured_answer_handles_hindi_benefit_question(tmp_path):
 def test_structured_answer_handles_telugu_eligibility_question(tmp_path):
     repo = Repository(DatabaseManager(tmp_path / "test.sqlite3"))
     document_id = repo.create_document(
-        DocumentRecord(filename="scheme.txt", file_path="scheme.txt", file_type="txt", checksum="qa790")
+        DocumentRecord(
+            filename="scheme.txt",
+            file_path="scheme.txt",
+            file_type="txt",
+            checksum="qa790",
+        )
     )
-    repo.save_scheme(document_id, Scheme(scheme_name="Rythu Scheme", eligibility=["తెలంగాణ రైతులు"]))
+    repo.save_scheme(
+        document_id, Scheme(scheme_name="Rythu Scheme", eligibility=["తెలంగాణ రైతులు"])
+    )
 
-    result = run_qa_pipeline("అర్హత ఏమిటి", document_id=document_id, language="te", repo=repo)
+    result = run_qa_pipeline(
+        "అర్హత ఏమిటి", document_id=document_id, language="te", repo=repo
+    )
 
     assert "తెలంగాణ రైతులు" in result.answer
     assert not result.refused
