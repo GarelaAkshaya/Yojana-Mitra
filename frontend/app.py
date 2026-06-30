@@ -3,8 +3,8 @@ Streamlit entrypoint for the application.
 Run with: streamlit run frontend/app.py
 """
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -20,8 +20,8 @@ from frontend.components.chat_display import (  # noqa: E402
     render_citations,
     render_home_feature,
 )
-from frontend.components.theme_loader import load_theme  # noqa: E402
 from frontend.components.language_buttons import language_buttons  # noqa: E402
+from frontend.components.theme_loader import load_theme  # noqa: E402
 from frontend.services.chat_flow import answer_question, transcribe_audio  # noqa: E402
 
 APP_DIR = Path(__file__).resolve().parent
@@ -124,9 +124,7 @@ def main() -> None:
     if uploaded_files:
         st.session_state["uploaded_files"] = uploaded_files
         st.success(translate("uploaded", language, count=len(uploaded_files)))
-        if st.button(
-            translate("continue_processing", language), key="home_continue_processing"
-        ):
+        if st.button(translate("continue_processing", language), key="home_continue_processing"):
             st.switch_page("pages/2_processing.py")
 
     st.markdown(
@@ -139,8 +137,7 @@ def main() -> None:
 
     processed_documents = st.session_state.get("processed_documents", [])
     document_options = {
-        f"{doc['scheme']['scheme_name']} ({doc['document_id']})": doc["document_id"]
-        for doc in processed_documents
+        f"{doc['scheme']['scheme_name']} ({doc['document_id']})": doc["document_id"] for doc in processed_documents
     }
     if not document_options:
         document_options = {
@@ -177,9 +174,7 @@ def main() -> None:
         if st.session_state.get("home_transcribed_audio_id") != audio_id:
             st.caption(translate("recorded", language))
             try:
-                st.session_state["home_question_input"] = transcribe_audio(
-                    audio_value, language
-                )
+                st.session_state["home_question_input"] = transcribe_audio(audio_value, language)
                 st.session_state["home_transcribed_audio_id"] = audio_id
                 st.session_state["home_auto_submit_voice"] = True
                 st.success(translate("transcribed", language))
@@ -195,9 +190,7 @@ def main() -> None:
         )
 
     send_requested = st.button(translate("send", language), key="home_send_question")
-    send_requested = send_requested or st.session_state.pop(
-        "home_auto_submit_voice", False
-    )
+    send_requested = send_requested or st.session_state.pop("home_auto_submit_voice", False)
     if send_requested:
         prompt = st.session_state.get("home_question_input", "").strip()
         if not prompt:
@@ -206,12 +199,8 @@ def main() -> None:
 
         result, response = answer_question(prompt, selected_document_id, language)
         citations = result.citations if result else []
-        st.session_state.setdefault("messages", []).append(
-            {"role": "user", "content": prompt, "citations": []}
-        )
-        st.session_state["messages"].append(
-            {"role": "assistant", "content": response, "citations": citations}
-        )
+        st.session_state.setdefault("messages", []).append({"role": "user", "content": prompt, "citations": []})
+        st.session_state["messages"].append({"role": "assistant", "content": response, "citations": citations})
         render_chat_message("user", prompt, language)
         render_chat_message("assistant", response, language)
         render_citations(citations, language)

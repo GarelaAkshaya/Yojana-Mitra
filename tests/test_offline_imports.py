@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 FORBIDDEN_IMPORTS = ("import requests", "import httpx", "import urllib", "from urllib")
 
 

@@ -7,7 +7,6 @@ from backend.ingestion.pdf_extractor import RawTextResult
 from backend.schemas.scheme import Chunk
 from backend.structuring.normalizer import normalize_text
 
-
 SECTION_ALIASES: dict[str, tuple[str, ...]] = {
     "Objective": (
         "objective",
@@ -140,9 +139,7 @@ def chunk_text(raw: RawTextResult, document_id: int) -> list[Chunk]:
     return chunks
 
 
-def _chunk_page(
-    text: str, document_id: int, page_number: int, max_chars: int, overlap: int
-) -> list[Chunk]:
+def _chunk_page(text: str, document_id: int, page_number: int, max_chars: int, overlap: int) -> list[Chunk]:
     paragraphs = _section_paragraphs(text)
     chunks: list[Chunk] = []
     buffer = ""
@@ -211,9 +208,7 @@ def _section_title(line: str) -> str:
     if len(compact) > 90:
         return ""
     for section, aliases in SECTION_ALIASES.items():
-        if any(
-            compact == alias or compact.startswith(f"{alias}:") for alias in aliases
-        ):
+        if any(compact == alias or compact.startswith(f"{alias}:") for alias in aliases):
             return section
     heading_match = HEADING_PATTERN.match(line)
     if not heading_match and ":" in line:
@@ -244,8 +239,4 @@ def _overlap_tail(text: str, overlap: int, section: str) -> str:
     tail = text[-overlap:].strip()
     if not tail:
         return ""
-    return (
-        f"{section}\n{tail}"
-        if section and not tail.lower().startswith(section.lower())
-        else tail
-    )
+    return f"{section}\n{tail}" if section and not tail.lower().startswith(section.lower()) else tail

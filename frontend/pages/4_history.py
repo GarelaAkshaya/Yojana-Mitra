@@ -18,11 +18,7 @@ if not messages:
     st.info(translate("no_history", language))
 else:
     for message in messages:
-        role = (
-            translate("you", language)
-            if message["role"] == "user"
-            else translate("assistant", language)
-        )
+        role = translate("you", language) if message["role"] == "user" else translate("assistant", language)
         st.markdown(f"**{role}:** {message['content']}")
         st.divider()
 

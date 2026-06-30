@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import time
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from backend.embeddings.bge_encoder import LocalEncoder
-from backend.retrieval.faiss_index import VectorIndex
+from backend.embeddings.bge_encoder import LocalEncoder  # noqa: E402
+from backend.retrieval.faiss_index import VectorIndex  # noqa: E402
 
 
 def main() -> None:

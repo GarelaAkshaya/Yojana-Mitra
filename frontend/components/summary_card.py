@@ -21,7 +21,7 @@ def summary_card(title: str, summary: str, metadata: dict | None = None) -> None
 
         if metadata:
             cols = st.columns(len(metadata))
-            for col, (key, value) in zip(cols, metadata.items()):
+            for col, (key, value) in zip(cols, metadata.items(), strict=False):
                 with col:
                     st.caption(key)
                     st.write(value)

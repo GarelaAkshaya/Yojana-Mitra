@@ -34,9 +34,7 @@ def transcribe_audio(audio_value, language: str) -> str:
     audio_path = save_audio_input(audio_value)
     selected_language = language_code(language)
     try:
-        transcript = (
-            WhisperEngine().transcribe(audio_path, language=selected_language).strip()
-        )
+        transcript = WhisperEngine().transcribe(audio_path, language=selected_language).strip()
     except WhisperModelUnavailableError:
         logger.exception("Voice transcription model is unavailable for %s", audio_path)
         raise
@@ -64,9 +62,7 @@ def answer_question(prompt: str, selected_document_id: int | None, language: str
                 document_id=selected_document_id,
                 language=selected_language,
             )
-            result.answer = sanitize_text(
-                result.answer or translate("not_found", selected_language)
-            )
+            result.answer = sanitize_text(result.answer or translate("not_found", selected_language))
             return result, result.answer
         except Exception as exc:
             logger.exception("Question answering failed")
@@ -77,7 +73,11 @@ def answer_prompt(prompt: str, selected_document_id: int | None, language: str) 
     result, response = answer_question(prompt, selected_document_id, language)
     if result and result.citations:
         sources = ", ".join(
-            f"{citation.get('document_name', 'document')} {translate('page', language_code(language))} {citation.get('page_number', 1)}"
+            (
+                f"{citation.get('document_name', 'document')} "
+                f"{translate('page', language_code(language))} "
+                f"{citation.get('page_number', 1)}"
+            )
             for citation in result.citations[:3]
         )
         return f"{response}\n\n{translate('sources', language)}: {sources}"

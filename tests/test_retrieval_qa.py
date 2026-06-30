@@ -1,5 +1,5 @@
-from backend.retrieval.hybrid_search import hybrid_search, rebuild_vector_index
 from backend.pipeline.qa_pipeline import run_qa_pipeline
+from backend.retrieval.hybrid_search import hybrid_search, rebuild_vector_index
 from backend.schemas.scheme import Chunk, DocumentRecord, Scheme
 from backend.storage.db_manager import DatabaseManager
 from backend.storage.repository import Repository
@@ -61,9 +61,7 @@ def test_hybrid_search_prefers_requested_section_over_faq(tmp_path):
     )
     rebuild_vector_index(repo)
 
-    results = hybrid_search(
-        "What is the eligibility?", document_id=document_id, repo=repo
-    )
+    results = hybrid_search("What is the eligibility?", document_id=document_id, repo=repo)
 
     assert results
     assert results[0].section_title == "Eligibility"
@@ -80,13 +78,9 @@ def test_structured_answer_handles_hindi_benefit_question(tmp_path):
             checksum="qa789",
         )
     )
-    repo.save_scheme(
-        document_id, Scheme(scheme_name="Skill Scheme", benefits=["निःशुल्क प्रशिक्षण"])
-    )
+    repo.save_scheme(document_id, Scheme(scheme_name="Skill Scheme", benefits=["निःशुल्क प्रशिक्षण"]))
 
-    result = run_qa_pipeline(
-        "लाब क्या है", document_id=document_id, language="hi", repo=repo
-    )
+    result = run_qa_pipeline("लाब क्या है", document_id=document_id, language="hi", repo=repo)
 
     assert "निःशुल्क प्रशिक्षण" in result.answer
     assert not result.refused
@@ -102,13 +96,9 @@ def test_structured_answer_handles_telugu_eligibility_question(tmp_path):
             checksum="qa790",
         )
     )
-    repo.save_scheme(
-        document_id, Scheme(scheme_name="Rythu Scheme", eligibility=["తెలంగాణ రైతులు"])
-    )
+    repo.save_scheme(document_id, Scheme(scheme_name="Rythu Scheme", eligibility=["తెలంగాణ రైతులు"]))
 
-    result = run_qa_pipeline(
-        "అర్హత ఏమిటి", document_id=document_id, language="te", repo=repo
-    )
+    result = run_qa_pipeline("అర్హత ఏమిటి", document_id=document_id, language="te", repo=repo)
 
     assert "తెలంగాణ రైతులు" in result.answer
     assert not result.refused

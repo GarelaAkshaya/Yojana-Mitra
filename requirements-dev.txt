@@ -14,7 +14,7 @@ mypy>=1.16
 flake8>=7.1
 pylint>=3.3
 vulture>=2.14
-semgrep>=1.80
+semgrep>=1.168
 pyupgrade>=3.19
 
 # Changelog automation

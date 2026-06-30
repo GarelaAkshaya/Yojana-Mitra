@@ -40,7 +40,7 @@ skips = ["B101"]
 
 [tool.pylint.main]
 ignore = [".venv", "data", "models"]
-jobs = 0
+jobs = 1
 recursive = true
 load-plugins = []
 

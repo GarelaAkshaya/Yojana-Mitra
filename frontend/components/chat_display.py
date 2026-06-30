@@ -7,7 +7,6 @@ import streamlit as st
 from backend.localization.text_sanitizer import sanitize_text
 from backend.localization.translator import translate
 
-
 ICONS = {
     "assistant": "◎",
     "user": "◉",
@@ -20,11 +19,7 @@ ICONS = {
 
 def render_chat_message(role: str, content: str, language: str = "en") -> None:
     role_key = "user" if role == "user" else "assistant"
-    label = (
-        translate("you", language)
-        if role_key == "user"
-        else translate("assistant", language)
-    )
+    label = translate("you", language) if role_key == "user" else translate("assistant", language)
     text = escape(sanitize_text(content)).replace("\n", "<br>")
     st.markdown(
         f"""
@@ -48,15 +43,11 @@ def render_citations(citations: list[dict], language: str) -> None:
         unsafe_allow_html=True,
     )
     for index, citation in enumerate(citations[:3], start=1):
-        title = sanitize_text(
-            citation.get("document_name") or citation.get("scheme_name") or "Document"
-        )
+        title = sanitize_text(citation.get("document_name") or citation.get("scheme_name") or "Document")
         page = citation.get("page_number", 1)
         section = sanitize_text(citation.get("section_title") or "")
         text = sanitize_text(citation.get("text") or "")
-        with st.expander(
-            f"{index}. {title} · {translate('page', language)} {page}", expanded=False
-        ):
+        with st.expander(f"{index}. {title} · {translate('page', language)} {page}", expanded=False):
             st.markdown(
                 f"""
                 <div class="ym-source-card">

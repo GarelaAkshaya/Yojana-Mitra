@@ -20,9 +20,7 @@ class LocalEncoder:
             try:
                 from sentence_transformers import SentenceTransformer
 
-                self._model = SentenceTransformer(
-                    str(self.model_path), local_files_only=True
-                )
+                self._model = SentenceTransformer(str(self.model_path), local_files_only=True)
                 self.dimension = int(self._model.get_sentence_embedding_dimension())
             except Exception:
                 self._model = False
@@ -31,9 +29,7 @@ class LocalEncoder:
     def encode(self, texts: list[str]) -> list[list[float]]:
         model = self._load_model()
         if model:
-            vectors = model.encode(
-                texts, normalize_embeddings=True, show_progress_bar=False
-            )
+            vectors = model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
             return vectors.astype(float).tolist()
         return [self._hash_embedding(text) for text in texts]
 

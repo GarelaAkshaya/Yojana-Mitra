@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+# pylint: disable=no-member
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 import yaml
-from backend.core.pydantic_compat import BaseModel, Field
+from pydantic import BaseModel, Field
 
 
 class AppConfig(BaseModel):

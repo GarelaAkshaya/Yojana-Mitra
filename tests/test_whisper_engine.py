@@ -10,9 +10,7 @@ from backend.speech.whisper_engine import WhisperEngine, WhisperModelUnavailable
 def test_missing_whisper_model_has_actionable_error(tmp_path: Path):
     engine = WhisperEngine(tmp_path / "missing-model")
 
-    with pytest.raises(
-        WhisperModelUnavailableError, match="Whisper model is not installed"
-    ):
+    with pytest.raises(WhisperModelUnavailableError, match="Whisper model is not installed"):
         engine._load()
 
 
@@ -22,9 +20,7 @@ def test_incomplete_whisper_model_directory_has_actionable_error(tmp_path: Path)
 
     engine = WhisperEngine(model_dir)
 
-    with pytest.raises(
-        WhisperModelUnavailableError, match="Whisper model directory is incomplete"
-    ):
+    with pytest.raises(WhisperModelUnavailableError, match="Whisper model directory is incomplete"):
         engine._load()
 
 

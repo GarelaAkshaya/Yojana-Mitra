@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from backend.localization.translator import language_name
 from backend.localization.text_sanitizer import sanitize_text
+from backend.localization.translator import language_name
 from backend.schemas.scheme import RetrievedChunk
 
 
@@ -9,7 +9,8 @@ def scheme_extraction_prompt(text: str) -> str:
     return f"""You extract structured data from Indian Government scheme documents.
 
 Return ONLY valid JSON with exactly these keys:
-scheme_name, category, objective, benefits, eligibility, required_documents, application_process, faq.
+scheme_name, category, objective, benefits, eligibility,
+required_documents, application_process, faq.
 
 Rules:
 - Use only the document text.
@@ -33,16 +34,19 @@ def qa_prompt(
 ) -> str:
     selected_language = language_name(language)
     context = "\n\n".join(
-        f"[chunk:{chunk.id} page:{chunk.page_number} section:{chunk.section_title or 'Unknown'} source:{chunk.document_name}]\n{sanitize_text(chunk.text)}"
+        (
+            f"[chunk:{chunk.id} page:{chunk.page_number} "
+            f"section:{chunk.section_title or 'Unknown'} "
+            f"source:{chunk.document_name}]\n"
+            f"{sanitize_text(chunk.text)}"
+        )
         for chunk in chunks
     )
 
     answer_language = selected_language
 
     intent_rule = (
-        f'- The detected question section is "{intent}". Answer only from chunks with that section.\n'
-        if intent
-        else ""
+        f'- The detected question section is "{intent}". Answer only from chunks with that section.\n' if intent else ""
     )
 
     return f"""You are Yojana Mitra, an offline AI assistant for Indian Government Schemes.
@@ -59,7 +63,8 @@ IMPORTANT RULES:
   "This question is outside the scope of the uploaded document."
 - If the retrieved context does not directly answer the question, do not attempt to answer.
 - Answer ONLY what the user asked.
-- The final answer must be entirely in {answer_language}; do not mix Hindi, Telugu, and English labels.
+- The final answer must be entirely in {answer_language};
+  do not mix Hindi, Telugu, and English labels.
 {intent_rule}- Ignore FAQ chunks unless the user explicitly asks an FAQ.
 - If the user asks for eligibility, return ONLY the eligibility criteria.
 - If the user asks for required documents, return ONLY the required documents.
@@ -74,7 +79,8 @@ Section-specific instructions:
 
 If the user asks for eligibility criteria:
 - Return only the text under the "Eligibility" heading.
-- Stop when the next heading begins (such as "Required Documents", "Benefits", or "Application Process").
+- Stop when the next heading begins (such as "Required Documents",
+  "Benefits", or "Application Process").
 
 If the user asks for required documents:
 - Return only the text under the "Required Documents" heading.

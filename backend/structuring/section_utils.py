@@ -4,7 +4,6 @@ import re
 
 from backend.schemas.scheme import RetrievedChunk
 
-
 PLACEHOLDERS = {
     "",
     "not specified in document",
@@ -78,7 +77,17 @@ SECTION_EQUIVALENTS = {
 }
 
 NEXT_SECTION_RE = re.compile(
-    r"^\s*(objective|benefits?|eligibility|eligible|required documents|documents|application process|how to apply|faqs?|frequently asked questions|contact|helpline|important dates?|last date|उद्देश्य|लाभ|लाब|पात्रता|योग्यता|आवश्यक दस्तावेज|दस्तावेज|आवेदन प्रक्रिया|संपर्क|లక్ష్యం|ఉద్దేశ్యం|ప్రయోజనాలు|లాభాలు|అర్హత|అవసరమైన పత్రాలు|పత్రాలు|దరఖాస్తు ప్రక్రియ|సంప్రదింపు)\s*:?\s*$",
+    (
+        r"^\s*("
+        r"objective|benefits?|eligibility|eligible|required documents|"
+        r"documents|application process|how to apply|faqs?|"
+        r"frequently asked questions|contact|helpline|important dates?|"
+        r"last date|उद्देश्य|लाभ|लाब|पात्रता|योग्यता|"
+        r"आवश्यक दस्तावेज|दस्तावेज|आवेदन प्रक्रिया|संपर्क|"
+        r"లక్ష్యం|ఉద్దేశ్యం|ప్రయోజనాలు|లాభాలు|అర్హత|"
+        r"అవసరమైన పత్రాలు|పత్రాలు|దరఖాస్తు ప్రక్రియ|సంప్రదింపు"
+        r")\s*:?\s*$"
+    ),
     re.I,
 )
 
@@ -98,18 +107,14 @@ def is_useful_text(value: object) -> bool:
     return isinstance(value, str) and value.strip().lower() not in PLACEHOLDERS
 
 
-def items_from_chunks(
-    chunks: list[RetrievedChunk], section_title: str, limit: int = 12
-) -> list[str]:
+def items_from_chunks(chunks: list[RetrievedChunk], section_title: str, limit: int = 12) -> list[str]:
     items: list[str] = []
     seen: set[str] = set()
     for chunk in chunks:
         if same_section(chunk.section_title, section_title):
             candidates = _items_from_section_text(chunk.text, section_title)
         elif not chunk.section_title:
-            candidates = _items_from_section_text(
-                chunk.text, section_title, allow_fallback=False
-            )
+            candidates = _items_from_section_text(chunk.text, section_title, allow_fallback=False)
         else:
             continue
         for item in candidates:
@@ -122,16 +127,12 @@ def items_from_chunks(
     return items
 
 
-def section_text_from_chunks(
-    chunks: list[RetrievedChunk], section_title: str, limit: int = 8
-) -> str:
+def section_text_from_chunks(chunks: list[RetrievedChunk], section_title: str, limit: int = 8) -> str:
     items = items_from_chunks(chunks, section_title, limit=limit)
     return "\n".join(f"- {item}" for item in items)
 
 
-def _items_from_section_text(
-    text: str, section_title: str, allow_fallback: bool = True
-) -> list[str]:
+def _items_from_section_text(text: str, section_title: str, allow_fallback: bool = True) -> list[str]:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     items: list[str] = []
     capture = False

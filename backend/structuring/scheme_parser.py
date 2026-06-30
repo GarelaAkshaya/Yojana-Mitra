@@ -5,7 +5,6 @@ import re
 from backend.schemas.scheme import ContactInfo, Scheme
 from backend.structuring.normalizer import normalize_text, split_list_block
 
-
 SECTION_ALIASES = {
     "eligibility": [
         "eligibility",
@@ -85,15 +84,9 @@ SECTION_ALIASES = {
 def extract_scheme_fields(text: str) -> Scheme:
     normalized = normalize_text(text)
     sections = _sections(normalized)
-    scheme_name = _first_match(
-        normalized, [r"scheme name\s*[:\-]\s*(.+)", r"^(.{5,90}Yojana.{0,80})$"]
-    )
-    department = _first_match(
-        normalized, [r"department\s*[:\-]\s*(.+)", r"ministry\s*[:\-]\s*(.+)"]
-    )
-    state = _first_match(
-        normalized, [r"state\s*[:\-]\s*(.+)", r"government of\s+([A-Za-z ]+)"]
-    )
+    scheme_name = _first_match(normalized, [r"scheme name\s*[:\-]\s*(.+)", r"^(.{5,90}Yojana.{0,80})$"])
+    department = _first_match(normalized, [r"department\s*[:\-]\s*(.+)", r"ministry\s*[:\-]\s*(.+)"])
+    state = _first_match(normalized, [r"state\s*[:\-]\s*(.+)", r"government of\s+([A-Za-z ]+)"])
     contact = ContactInfo(
         phone=_first_match(normalized, [r"(\+?\d[\d\-\s]{7,}\d)"], default=""),
         email=_first_match(
@@ -124,9 +117,7 @@ def extract_scheme_fields(text: str) -> Scheme:
         benefits=split_list_block(_single_section(sections, "benefits")),
         documents=split_list_block(_single_section(sections, "documents")),
         important_dates=split_list_block(_single_section(sections, "important_dates")),
-        application_process=split_list_block(
-            _single_section(sections, "application_process")
-        ),
+        application_process=split_list_block(_single_section(sections, "application_process")),
         faq=split_list_block(_single_section(sections, "faq")),
         contact=contact,
         summary=summary,
@@ -184,9 +175,7 @@ def _title_from_text(text: str) -> str:
 
 def _summary(text: str) -> str:
     sentences = re.split(r"(?<=[.!?])\s+", text)
-    summary = " ".join(
-        sentence.strip() for sentence in sentences[:2] if sentence.strip()
-    )
+    summary = " ".join(sentence.strip() for sentence in sentences[:2] if sentence.strip())
     return summary[:500] if summary else "Not specified in document"
 
 

@@ -6,7 +6,11 @@ from html import escape
 
 import streamlit as st
 
-from backend.localization.translator import localize_items, localize_value, translate
+from backend.localization.translator import (
+    localize_items,
+    localize_value,
+    translate,
+)
 from backend.storage.repository import Repository
 from backend.structuring.section_utils import useful_items
 from frontend.components.chat_display import (
@@ -18,24 +22,31 @@ from frontend.components.theme_loader import load_theme
 from frontend.services.chat_flow import answer_question, transcribe_audio
 
 
-def _render_items(
-    title: str, items: list[str], icon: str, empty_text: str, language: str
-) -> None:
+def _render_items(title: str, items: list[str], icon: str, empty_text: str, language: str) -> None:
     items = localize_items(useful_items(items), language)
+
     st.markdown(
-        f"<div class='section-card'><div class='section-title'><span>{escape(icon)}</span>{escape(title)}</div>",
+        (f"<div class='section-card'><div class='section-title'><span>{escape(icon)}</span>{escape(title)}</div>"),
         unsafe_allow_html=True,
     )
+
     if not items:
         st.markdown(
-            f"<p class='muted'>{escape(empty_text)}</p></div>", unsafe_allow_html=True
+            f"<p class='muted'>{escape(empty_text)}</p></div>",
+            unsafe_allow_html=True,
         )
         return
+
     for item in items:
         st.markdown(
-            f"<div class='section-item'>{escape(item)}</div>", unsafe_allow_html=True
+            f"<div class='section-item'>{escape(item)}</div>",
+            unsafe_allow_html=True,
         )
-    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown(
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 load_theme()
@@ -63,14 +74,12 @@ st.session_state.setdefault("chat_text_input", "")
 
 processed_documents = st.session_state.get("processed_documents", [])
 document_options = {
-    f"{doc['scheme']['scheme_name']} ({doc['document_id']})": doc["document_id"]
-    for doc in processed_documents
+    f"{doc['scheme']['scheme_name']} ({doc['document_id']})": doc["document_id"] for doc in processed_documents
 }
 
 if not document_options:
     document_options = {
-        f"{scheme['scheme_name']} ({scheme['document_id']})": scheme["document_id"]
-        for scheme in repo.list_schemes()
+        f"{scheme['scheme_name']} ({scheme['document_id']})": scheme["document_id"] for scheme in repo.list_schemes()
     }
 
 selected_document_id = None
@@ -125,9 +134,7 @@ with chat_tab:
         if st.session_state.get("chat_transcribed_audio_id") != audio_id:
             st.caption(translate("recorded", language))
             try:
-                st.session_state["chat_text_input"] = transcribe_audio(
-                    audio_value, language
-                )
+                st.session_state["chat_text_input"] = transcribe_audio(audio_value, language)
                 st.session_state["chat_transcribed_audio_id"] = audio_id
                 st.session_state["chat_auto_submit_voice"] = True
                 st.success(translate("transcribed", language))
@@ -145,13 +152,9 @@ with chat_tab:
                 placeholder=translate("type_message", language),
             )
         with send_column:
-            send_clicked = st.button(
-                translate("send", language), use_container_width=True
-            )
+            send_clicked = st.button(translate("send", language), use_container_width=True)
 
-    send_requested = send_clicked or st.session_state.pop(
-        "chat_auto_submit_voice", False
-    )
+    send_requested = send_clicked or st.session_state.pop("chat_auto_submit_voice", False)
     if send_requested:
         prompt = st.session_state.get("chat_text_input", "").strip()
 
@@ -159,17 +162,13 @@ with chat_tab:
             st.warning(translate("empty_message", language))
             st.stop()
 
-        st.session_state["messages"].append(
-            {"role": "user", "content": prompt, "citations": []}
-        )
+        st.session_state["messages"].append({"role": "user", "content": prompt, "citations": []})
         render_chat_message("user", prompt, language)
 
         result, response = answer_question(prompt, selected_document_id, language)
         citations = result.citations if result else []
 
-        st.session_state["messages"].append(
-            {"role": "assistant", "content": response, "citations": citations}
-        )
+        st.session_state["messages"].append({"role": "assistant", "content": response, "citations": citations})
         render_chat_message("assistant", response, language)
         render_citations(citations, language)
 
@@ -181,24 +180,65 @@ with structured_tab:
         st.info(translate("upload_first", language))
     else:
         details = repo.get_scheme_details(selected_document_id)
+
         if not details:
             st.info(translate("structured_missing", language))
         else:
+            scheme_name = escape(
+                localize_value(
+                    details.get("scheme_name") or translate("not_specified_short", language),
+                    language,
+                )
+            )
+            category = escape(
+                localize_value(
+                    details.get("category") or translate("not_specified_short", language),
+                    language,
+                )
+            )
+            filename = escape(
+                localize_value(
+                    details.get("filename") or translate("not_specified_short", language),
+                    language,
+                )
+            )
+            objective = escape(
+                localize_value(
+                    details.get("objective") or translate("not_specified_short", language),
+                    language,
+                )
+            )
+
             st.markdown(
                 f"""
                 <div class="scheme-summary">
-                  <p class="eyebrow">{escape(ICONS["structured"])} {escape(translate("structured_data", language))}</p>
-                  <h2>{escape(localize_value(details.get("scheme_name") or translate("not_specified_short", language), language))}</h2>
+                  <p class="eyebrow">
+                    {escape(ICONS["structured"])}
+                    {escape(translate("structured_data", language))}
+                  </p>
+
+                  <h2>{scheme_name}</h2>
+
                   <div class="summary-grid">
-                    <div><span>{escape(translate("category", language))}</span><strong>{escape(localize_value(details.get("category") or translate("not_specified_short", language), language))}</strong></div>
-                    <div><span>{escape(translate("source_file", language))}</span><strong>{escape(localize_value(details.get("filename") or translate("not_specified_short", language), language))}</strong></div>
+                    <div>
+                      <span>{escape(translate("category", language))}</span>
+                      <strong>{category}</strong>
+                    </div>
+
+                    <div>
+                      <span>{escape(translate("source_file", language))}</span>
+                      <strong>{filename}</strong>
+                    </div>
                   </div>
-                  <p>{escape(localize_value(details.get("objective") or translate("not_specified_short", language), language))}</p>
+
+                  <p>{objective}</p>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
+
             empty_text = translate("not_specified_short", language)
+
             _render_items(
                 translate("benefits", language),
                 details.get("benefits", []),
@@ -206,6 +246,7 @@ with structured_tab:
                 empty_text,
                 language,
             )
+
             _render_items(
                 translate("eligibility", language),
                 details.get("eligibility", []),
@@ -213,6 +254,7 @@ with structured_tab:
                 empty_text,
                 language,
             )
+
             _render_items(
                 translate("required_documents", language),
                 details.get("documents", []),
@@ -220,6 +262,7 @@ with structured_tab:
                 empty_text,
                 language,
             )
+
             _render_items(
                 translate("application_process", language),
                 details.get("application_process", []),

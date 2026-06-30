@@ -71,10 +71,7 @@ def _fallback_answer(question: str, chunks: list[RetrievedChunk]) -> str:
             if len(sentence) < 4:
                 continue
             sentence_terms = {
-                _term_key(term)
-                for term in re.findall(
-                    r"[\w\u0900-\u097F\u0C00-\u0C7F]+", sentence.lower()
-                )
+                _term_key(term) for term in re.findall(r"[\w\u0900-\u097F\u0C00-\u0C7F]+", sentence.lower())
             }
             score = len(question_terms & sentence_terms)
             if score > best_score:
@@ -87,14 +84,10 @@ def _section_lines(chunks: list[RetrievedChunk], intent: str) -> list[str]:
     lines: list[str] = []
     seen: set[str] = set()
     for chunk in chunks:
-        if intent and _normalize_section(chunk.section_title) != _normalize_section(
-            intent
-        ):
+        if intent and _normalize_section(chunk.section_title) != _normalize_section(intent):
             continue
         for line in chunk.text.splitlines():
-            cleaned = sanitize_text(
-                re.sub(r"^\s*(?:[-*•]|\d+[\).])\s*", "", line).strip(" :-\t")
-            )
+            cleaned = sanitize_text(re.sub(r"^\s*(?:[-*•]|\d+[\).])\s*", "", line).strip(" :-\t"))
             if not cleaned or _normalize_section(cleaned) == _normalize_section(intent):
                 continue
             key = re.sub(r"\s+", " ", cleaned.lower())

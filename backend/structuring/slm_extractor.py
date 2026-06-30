@@ -7,8 +7,8 @@ from typing import Any
 from backend.llm.llama_cpp_engine import LlamaCppEngine
 from backend.llm.prompt_templates import scheme_extraction_prompt
 from backend.schemas.scheme import Scheme
-from backend.structuring.scheme_parser import extract_scheme_fields
 from backend.structuring.schema_validator import validate_scheme
+from backend.structuring.scheme_parser import extract_scheme_fields
 
 
 def extract_structured_scheme(text: str) -> Scheme:
@@ -16,9 +16,7 @@ def extract_structured_scheme(text: str) -> Scheme:
     if engine.available():
         payload = _extract_json(engine.generate(scheme_extraction_prompt(text)))
         if payload:
-            return validate_scheme(
-                _scheme_from_payload(payload, extract_scheme_fields(text))
-            )
+            return validate_scheme(_scheme_from_payload(payload, extract_scheme_fields(text)))
     return validate_scheme(extract_scheme_fields(text))
 
 
@@ -47,8 +45,7 @@ def _scheme_from_payload(payload: dict[str, Any], fallback: Scheme) -> Scheme:
         eligibility=_items(payload.get("eligibility")) or fallback.eligibility,
         documents=_items(required_documents) or fallback.documents,
         important_dates=fallback.important_dates,
-        application_process=_items(payload.get("application_process"))
-        or fallback.application_process,
+        application_process=_items(payload.get("application_process")) or fallback.application_process,
         faq=_items(payload.get("faq")) or fallback.faq,
         contact=fallback.contact,
         summary=fallback.summary,

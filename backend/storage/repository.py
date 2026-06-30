@@ -28,9 +28,7 @@ class Repository:
 
     def create_document(self, record: DocumentRecord) -> int:
         with self.db.connect() as conn:
-            existing = conn.execute(
-                "SELECT id FROM documents WHERE checksum = ?", (record.checksum,)
-            ).fetchone()
+            existing = conn.execute("SELECT id FROM documents WHERE checksum = ?", (record.checksum,)).fetchone()
             if existing:
                 return int(existing["id"])
             cur = conn.execute(
@@ -49,9 +47,7 @@ class Repository:
             )
             return int(cur.lastrowid or 0)
 
-    def update_document_status(
-        self, document_id: int, status: str, error: str | None = None
-    ) -> None:
+    def update_document_status(self, document_id: int, status: str, error: str | None = None) -> None:
         with self.db.connect() as conn:
             conn.execute(
                 """
@@ -78,12 +74,8 @@ class Repository:
             "eligibility_json": json.dumps(scheme.eligibility, ensure_ascii=False),
             "benefits_json": json.dumps(scheme.benefits, ensure_ascii=False),
             "documents_json": json.dumps(scheme.documents, ensure_ascii=False),
-            "important_dates_json": json.dumps(
-                scheme.important_dates, ensure_ascii=False
-            ),
-            "application_process_json": json.dumps(
-                scheme.application_process, ensure_ascii=False
-            ),
+            "important_dates_json": json.dumps(scheme.important_dates, ensure_ascii=False),
+            "application_process_json": json.dumps(scheme.application_process, ensure_ascii=False),
             "contact_json": scheme.contact.model_dump_json(),
             "raw_json": json.dumps(scheme.raw, ensure_ascii=False),
         }
@@ -118,25 +110,17 @@ class Repository:
             )
             scheme_id = int(cur.lastrowid or 0)
             self._insert_section_items(conn, "benefits", scheme_id, scheme.benefits)
-            self._insert_section_items(
-                conn, "eligibility", scheme_id, scheme.eligibility
-            )
-            self._insert_section_items(
-                conn, "required_documents", scheme_id, scheme.documents
-            )
-            self._insert_section_items(
-                conn, "application_process", scheme_id, scheme.application_process
-            )
+            self._insert_section_items(conn, "eligibility", scheme_id, scheme.eligibility)
+            self._insert_section_items(conn, "required_documents", scheme_id, scheme.documents)
+            self._insert_section_items(conn, "application_process", scheme_id, scheme.application_process)
             self._insert_section_items(conn, "faqs", scheme_id, scheme.faq)
             return scheme_id
 
     @staticmethod
-    def _insert_section_items(
-        conn: Any, table: str, scheme_id: int, items: list[str]
-    ) -> None:
+    def _insert_section_items(conn: Any, table: str, scheme_id: int, items: list[str]) -> None:
         for index, item in enumerate(items):
             conn.execute(
-                f"INSERT INTO {table}(scheme_id, item_order, text) VALUES (?, ?, ?)",
+                f"INSERT INTO {table}(scheme_id, item_order, text) VALUES (?, ?, ?)",  # nosec B608
                 (scheme_id, index, item),
             )
 
@@ -144,9 +128,7 @@ class Repository:
         ids: list[int] = []
         with self.db.connect() as conn:
             if chunks:
-                conn.execute(
-                    "DELETE FROM chunks WHERE document_id = ?", (chunks[0].document_id,)
-                )
+                conn.execute("DELETE FROM chunks WHERE document_id = ?", (chunks[0].document_id,))
             for chunk in chunks:
                 cur = conn.execute(
                     """
@@ -164,9 +146,7 @@ class Repository:
                 ids.append(int(cur.lastrowid or 0))
         return ids
 
-    def save_embedding(
-        self, chunk_id: int, vector: list[float], model_name: str
-    ) -> None:
+    def save_embedding(self, chunk_id: int, vector: list[float], model_name: str) -> None:
         with self.db.connect() as conn:
             conn.execute(
                 """
@@ -192,9 +172,7 @@ class Repository:
             rows = conn.execute(sql, params).fetchall()
         return [RetrievedChunk(**dict(row)) for row in rows]
 
-    def search_fts(
-        self, query: str, limit: int = 5, document_id: int | None = None
-    ) -> list[RetrievedChunk]:
+    def search_fts(self, query: str, limit: int = 5, document_id: int | None = None) -> list[RetrievedChunk]:
         tokens = re.findall(r"[\w]+", query.lower())
         clean_query = " OR ".join(tokens) or query
         sql = """
@@ -241,29 +219,21 @@ class Repository:
             }
             for key, table in section_tables.items():
                 rows = conn.execute(
-                    f"SELECT text FROM {table} WHERE scheme_id = ? ORDER BY item_order, id",
+                    f"SELECT text FROM {table} WHERE scheme_id = ? ORDER BY item_order, id",  # nosec B608
                     (details["id"],),
                 ).fetchall()
                 if rows:
                     details[key] = useful_items([row["text"] for row in rows])
                 else:
                     json_key = "documents_json" if key == "documents" else f"{key}_json"
-                    details[key] = useful_items(
-                        json.loads(details.get(json_key, "[]"))
-                        if json_key in details
-                        else []
-                    )
+                    details[key] = useful_items(json.loads(details.get(json_key, "[]")) if json_key in details else [])
         chunks = self.get_chunks(document_id)
         for section_title, key in SECTION_TO_DETAIL_KEY.items():
             if not details.get(key):
                 details[key] = items_from_chunks(chunks, section_title)
         if not is_useful_text(details.get("objective")):
             objective_items = items_from_chunks(chunks, "Objective", limit=4)
-            details["objective"] = (
-                " ".join(objective_items)
-                if objective_items
-                else details.get("objective", "")
-            )
+            details["objective"] = " ".join(objective_items) if objective_items else details.get("objective", "")
         return details
 
     def list_schemes(self) -> list[dict[str, Any]]:
@@ -308,9 +278,7 @@ class Repository:
     ) -> dict[str, Any] | None:
         key = self.cache_key(document_id, question, language)
         with self.db.connect() as conn:
-            row = conn.execute(
-                "SELECT response_json FROM response_cache WHERE cache_key = ?", (key,)
-            ).fetchone()
+            row = conn.execute("SELECT response_json FROM response_cache WHERE cache_key = ?", (key,)).fetchone()
         return json.loads(row["response_json"]) if row else None
 
     def set_cached_response(
@@ -333,6 +301,4 @@ class Repository:
     @staticmethod
     def cache_key(document_id: int | None, question: str, language: str = "en") -> str:
         normalized = " ".join(question.lower().split())
-        return sha256(
-            f"qa-v3:{document_id or 'all'}:{language}:{normalized}".encode()
-        ).hexdigest()
+        return sha256(f"qa-v3:{document_id or 'all'}:{language}:{normalized}".encode()).hexdigest()

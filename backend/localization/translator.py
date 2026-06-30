@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 LANGUAGE_NAMES = {
     "English": "en",
     "Hindi": "hi",
@@ -24,7 +23,7 @@ CATALOG = {
         "app_title": "Yojana Mitra",
         "navigation": "Navigation",
         "welcome_title": "Welcome to Yojana Mitra",
-        "welcome_body": "Upload a scheme document, choose your language, and ask questions in plain language.",
+        "welcome_body": ("Upload a scheme document, choose your language, and ask questions in plain language."),
         "settings_title": "Settings",
         "settings_language_home": "Language selection is available on the Home page.",
         "language": "Language",
@@ -158,7 +157,7 @@ CATALOG = {
         "app_title": "యోజన మిత్ర",
         "navigation": "నావిగేషన్",
         "welcome_title": "యోజన మిత్రకు స్వాగతం",
-        "welcome_body": "పథక పత్రాన్ని అప్లోడ్ చేయండి, భాషను ఎంచుకోండి, సులభమైన భాషలో ప్రశ్నలు అడగండి.",
+        "welcome_body": ("పథక పత్రాన్ని అప్లోడ్ చేయండి, భాషను ఎంచుకోండి, సులభమైన భాషలో ప్రశ్నలు అడగండి."),
         "settings_title": "సెట్టింగ్స్",
         "settings_language_home": "భాష ఎంపిక హోమ్ పేజీలో అందుబాటులో ఉంది.",
         "language": "భాష",
@@ -187,7 +186,7 @@ CATALOG = {
         "voice_unavailable": "వాయిస్ ఇన్‌పుట్ కోసం Streamlit 1.38 లేదా కొత్త వెర్షన్ అవసరం.",
         "voice_failed": "వాయిస్ ట్రాన్స్‌క్రిప్షన్ విఫలమైంది",
         "empty_message": "పంపే ముందు సందేశం టైప్ చేయండి లేదా వాయిస్ రికార్డ్ చేయండి.",
-        "need_document": "దయచేసి ముందుగా పత్రాన్ని అప్లోడ్ చేసి ప్రాసెస్ చేసి, తరువాత ప్రశ్న అడగండి.",
+        "need_document": ("దయచేసి ముందుగా పత్రాన్ని అప్లోడ్ చేసి ప్రాసెస్ చేసి, తరువాత ప్రశ్న అడగండి."),
         "searching": "పత్రంలో వెతుకుతోంది...",
         "processing_failed": "క్షమించండి, ప్రాసెసింగ్ విఫలమైనందున సమాధానం ఇవ్వలేకపోయాను",
         "sources": "మూలాలు",

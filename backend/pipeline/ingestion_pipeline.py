@@ -27,9 +27,7 @@ class IngestionResult(BaseModel):
     vector_index_ready: bool = False
 
 
-def run_ingestion_pipeline(
-    file_path: str | Path, repo: Repository | None = None
-) -> IngestionResult:
+def run_ingestion_pipeline(file_path: str | Path, repo: Repository | None = None) -> IngestionResult:
     repo = repo or Repository()
     record = load_file(file_path)
     document_id = repo.create_document(record)

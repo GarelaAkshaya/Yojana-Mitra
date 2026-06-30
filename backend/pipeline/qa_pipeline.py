@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from backend.llm.answer_generator import generate_answer
 from backend.core.pydantic_compat import BaseModel
+from backend.llm.answer_generator import generate_answer
 from backend.localization.text_sanitizer import sanitize_text
 from backend.localization.translator import localize_items, translate
 from backend.retrieval.hybrid_search import detect_section_intent
+from backend.retrieval.retriever import retrieve_context
 from backend.schemas.scheme import GroundedAnswer, RetrievedChunk
 from backend.storage.repository import Repository
 from backend.structuring.section_utils import SECTION_TO_DETAIL_KEY, useful_items
-from backend.retrieval.retriever import retrieve_context
 
 
 class QAResult(BaseModel):
@@ -33,15 +33,11 @@ def run_qa_pipeline(
 
     structured = _structured_section_answer(question, document_id, repo, language)
     if structured:
-        repo.set_cached_response(
-            document_id, question, structured.model_dump(), language
-        )
+        repo.set_cached_response(document_id, question, structured.model_dump(), language)
         return structured
 
     chunks, confidence = retrieve_context(question, document_id=document_id, repo=repo)
-    grounded: GroundedAnswer = generate_answer(
-        question, chunks, confidence, language=language
-    )
+    grounded: GroundedAnswer = generate_answer(question, chunks, confidence, language=language)
     repo.log_query(document_id, question, grounded, language)
     result = QAResult(
         answer=sanitize_text(grounded.answer),
@@ -69,11 +65,7 @@ def _structured_section_answer(
     items = localize_items(useful_items(details.get(key, [])), language)
     if not items:
         return None
-    chunks = [
-        chunk
-        for chunk in repo.get_chunks(document_id)
-        if _same_section(chunk.section_title, intent)
-    ]
+    chunks = [chunk for chunk in repo.get_chunks(document_id) if _same_section(chunk.section_title, intent)]
     citations = [_citation(chunk) for chunk in chunks[:3]]
     answer = sanitize_text("\n".join(f"- {item}" for item in items[:10]))
     return QAResult(
@@ -90,6 +82,4 @@ def _citation(chunk: RetrievedChunk) -> dict:
 
 
 def _same_section(left: str, right: str) -> bool:
-    return "".join(ch for ch in left.lower() if ch.isalnum()) == "".join(
-        ch for ch in right.lower() if ch.isalnum()
-    )
+    return "".join(ch for ch in left.lower() if ch.isalnum()) == "".join(ch for ch in right.lower() if ch.isalnum())

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+# pylint: disable=no-member
 import json
 from pathlib import Path
 from typing import Any, get_origin, get_type_hints
 
 try:
-    from pydantic import BaseModel, Field
+    from pydantic import BaseModel, Field  # pylint: disable=unused-import
 except ImportError:
 
     class _FieldInfo:
@@ -68,12 +69,8 @@ def _coerce_value(annotation: Any, value: Any) -> Any:
         return value
     if annotation is Path and isinstance(value, str):
         return Path(value)
-    if (
-        isinstance(annotation, type)
-        and issubclass(annotation, BaseModel)
-        and isinstance(value, dict)
-    ):
-        return getattr(annotation, "model_validate")(value)
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel) and isinstance(value, dict):
+        return annotation.model_validate(value)  # type: ignore[attr-defined]
     origin = get_origin(annotation)
     if origin is list and value is None:
         return []
@@ -82,7 +79,7 @@ def _coerce_value(annotation: Any, value: Any) -> Any:
 
 def _dump_value(value: Any) -> Any:
     if isinstance(value, BaseModel):
-        return getattr(value, "model_dump")()
+        return value.model_dump()
     if isinstance(value, Path):
         return str(value)
     if isinstance(value, list):

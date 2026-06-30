@@ -24,10 +24,7 @@ def voice_input_widget(key: str = "voice_input"):
     try:
         audio_value = st.audio_input("Record your message", key=key)
     except AttributeError:
-        st.warning(
-            "Voice input requires Streamlit >= 1.38. "
-            "Please upgrade Streamlit to use this feature."
-        )
+        st.warning("Voice input requires Streamlit >= 1.38. Please upgrade Streamlit to use this feature.")
         return None
 
     if audio_value is not None:

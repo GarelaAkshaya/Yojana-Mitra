@@ -29,9 +29,7 @@ class WhisperEngine:
             )
         if self.model_path.is_dir():
             missing_files = [
-                file_name
-                for file_name in ("config.json", "model.bin")
-                if not (self.model_path / file_name).exists()
+                file_name for file_name in ("config.json", "model.bin") if not (self.model_path / file_name).exists()
             ]
             if missing_files:
                 raise WhisperModelUnavailableError(
@@ -50,9 +48,7 @@ class WhisperEngine:
                     "faster-whisper is not installed. Install requirements.txt, then try voice input again."
                 ) from exc
             try:
-                self._model = WhisperModel(
-                    str(self.model_path), device="cpu", compute_type="int8"
-                )
+                self._model = WhisperModel(str(self.model_path), device="cpu", compute_type="int8")
             except Exception as exc:
                 raise WhisperModelUnavailableError(
                     f"Whisper model could not be loaded from {self.model_path}: {exc}"
@@ -73,8 +69,4 @@ class WhisperEngine:
             condition_on_previous_text=False,
             vad_filter=True,
         )
-        return sanitize_text(
-            " ".join(
-                segment.text.strip() for segment in segments if segment.text.strip()
-            )
-        )
+        return sanitize_text(" ".join(segment.text.strip() for segment in segments if segment.text.strip()))
