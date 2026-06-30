@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import Any, get_origin, get_type_hints
 
 try:
-    from pydantic import BaseModel as PydanticBaseModel  # noqa: F401
-    from pydantic import Field as PydanticField  # noqa: F401
+    from pydantic import BaseModel, Field
 except ImportError:
 
     class _FieldInfo:
@@ -19,10 +18,14 @@ except ImportError:
                 return self.default_factory()
             return self.default
 
-    def Field(default: Any = None, default_factory: Any = None, **_: Any) -> Any:
+    def Field(  # type: ignore[no-redef]  # noqa: N802
+        default: Any = None,
+        default_factory: Any = None,
+        **_: Any,
+    ) -> Any:
         return _FieldInfo(default=default, default_factory=default_factory)
 
-    class BaseModel:
+    class BaseModel:  # type: ignore[no-redef]
         def __init__(self, **data: Any) -> None:
             annotations = _all_annotations(type(self))
             for name, annotation in annotations.items():
@@ -44,10 +47,7 @@ except ImportError:
             return cls(**payload)
 
         def model_dump(self) -> dict[str, Any]:
-            return {
-                name: _dump_value(getattr(self, name))
-                for name in _all_annotations(type(self))
-            }
+            return {name: _dump_value(getattr(self, name)) for name in _all_annotations(type(self))}
 
         def model_dump_json(self) -> str:
             return json.dumps(self.model_dump(), ensure_ascii=False)
@@ -73,7 +73,7 @@ def _coerce_value(annotation: Any, value: Any) -> Any:
         and issubclass(annotation, BaseModel)
         and isinstance(value, dict)
     ):
-        return annotation.model_validate(value)
+        return getattr(annotation, "model_validate")(value)
     origin = get_origin(annotation)
     if origin is list and value is None:
         return []
@@ -82,7 +82,7 @@ def _coerce_value(annotation: Any, value: Any) -> Any:
 
 def _dump_value(value: Any) -> Any:
     if isinstance(value, BaseModel):
-        return value.model_dump()
+        return getattr(value, "model_dump")()
     if isinstance(value, Path):
         return str(value)
     if isinstance(value, list):

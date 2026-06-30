@@ -1,0 +1,122 @@
+stages:
+  - security
+  - quality
+  - test
+  - release
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYTHONUNBUFFERED: "1"
+  COVERAGE_FAIL_UNDER: "70"
+
+.python_job:
+  image: python:3.11-slim
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .cache/pip
+  before_script:
+    - python -m pip install --upgrade pip
+    - python -m pip install -r requirements-dev.txt
+
+gitleaks_secret_scan:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:v8.24.2
+    entrypoint: [""]
+  script:
+    - gitleaks detect --source . --verbose --redact
+
+trufflehog_secret_scan:
+  stage: security
+  image:
+    name: trufflesecurity/trufflehog:latest
+    entrypoint: [""]
+  script:
+    - trufflehog filesystem . --fail --no-update
+
+dependency_audit:
+  extends: .python_job
+  stage: security
+  script:
+    - pip-audit -r requirements.txt --strict
+
+bandit_static_analysis:
+  extends: .python_job
+  stage: security
+  script:
+    - bandit -c pyproject.toml -r backend frontend
+
+semgrep_static_analysis:
+  extends: .python_job
+  stage: security
+  script:
+    - semgrep --config p/python --config p/security-audit backend frontend
+
+ruff_lint:
+  extends: .python_job
+  stage: quality
+  script:
+    - ruff check backend frontend tests
+
+flake8_lint:
+  extends: .python_job
+  stage: quality
+  script:
+    - flake8 backend frontend tests
+
+pylint_lint:
+  extends: .python_job
+  stage: quality
+  script:
+    - pylint --exit-zero backend frontend tests
+
+vulture_dead_code:
+  extends: .python_job
+  stage: quality
+  script:
+    - vulture backend frontend tests
+
+mypy_type_check:
+  extends: .python_job
+  stage: quality
+  script:
+    - mypy backend frontend tests
+
+pytest_tests:
+  extends: .python_job
+  stage: test
+  script:
+    - pytest
+
+coverage_report:
+  extends: .python_job
+  stage: test
+  script:
+    - coverage run -m pytest
+    - coverage xml
+    - coverage html
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+      - htmlcov/
+    expire_in: 1 week
+
+coverage_threshold:
+  extends: .python_job
+  stage: test
+  script:
+    - coverage run -m pytest
+    - coverage report --fail-under="$COVERAGE_FAIL_UNDER"
+
+git_cliff_changelog_check:
+  extends: .python_job
+  stage: release
+  script:
+    - git-cliff --config cliff.toml --unreleased --output CHANGELOG.generated.md
+    - test -s CHANGELOG.generated.md
