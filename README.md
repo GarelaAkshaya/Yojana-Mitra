@@ -75,6 +75,14 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
+`requirements.txt` is intentionally lean so the hosted Streamlit app starts
+quickly. For local OCR, voice transcription, sentence-transformer embeddings,
+and llama.cpp support, install the full offline stack instead:
+
+```bash
+.venv/bin/python -m pip install -r requirements-full.txt
+```
+
 For the complete offline experience, place local model files under `models/`
 as described by:
 

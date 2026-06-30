@@ -22,7 +22,7 @@ class OCREngine:
             try:
                 import easyocr
             except ImportError as exc:
-                raise RuntimeError("EasyOCR is required for OCR. Install requirements.txt first.") from exc
+                raise RuntimeError("EasyOCR is required for OCR. Install requirements-full.txt first.") from exc
             self.model_dir.mkdir(parents=True, exist_ok=True)
             allow_downloads = os.getenv("YOJANA_MITRA_ALLOW_MODEL_DOWNLOADS", "").lower() in {"1", "true", "yes"}
             try:

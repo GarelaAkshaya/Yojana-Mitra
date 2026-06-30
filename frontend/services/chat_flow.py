@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import streamlit as st
@@ -9,8 +10,9 @@ import streamlit as st
 from backend.core.config import get_settings
 from backend.localization.text_sanitizer import sanitize_text
 from backend.localization.translator import language_code, translate
-from backend.pipeline.qa_pipeline import run_qa_pipeline
-from backend.speech.whisper_engine import WhisperEngine, WhisperModelUnavailableError
+
+if TYPE_CHECKING:
+    from backend.pipeline.qa_pipeline import QAResult
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +33,8 @@ def save_audio_input(audio_value) -> Path:
 
 
 def transcribe_audio(audio_value, language: str) -> str:
+    from backend.speech.whisper_engine import WhisperEngine, WhisperModelUnavailableError
+
     audio_path = save_audio_input(audio_value)
     selected_language = language_code(language)
     try:
@@ -57,6 +61,8 @@ def answer_question(prompt: str, selected_document_id: int | None, language: str
 
     with st.spinner(translate("searching", selected_language)):
         try:
+            from backend.pipeline.qa_pipeline import run_qa_pipeline
+
             result = run_qa_pipeline(
                 clean_prompt,
                 document_id=selected_document_id,

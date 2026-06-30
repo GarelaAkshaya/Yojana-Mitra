@@ -29,6 +29,13 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
+For OCR, voice transcription, local embeddings, and local LLM answers, install
+the full offline stack:
+
+```bash
+.venv/bin/python -m pip install -r requirements-full.txt
+```
+
 ---
 
 ## Launch Application

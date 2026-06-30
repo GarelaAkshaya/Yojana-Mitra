@@ -45,7 +45,7 @@ class WhisperEngine:
                 from faster_whisper import WhisperModel
             except ImportError as exc:
                 raise WhisperModelUnavailableError(
-                    "faster-whisper is not installed. Install requirements.txt, then try voice input again."
+                    "faster-whisper is not installed. Install requirements-full.txt, then try voice input again."
                 ) from exc
             try:
                 self._model = WhisperModel(str(self.model_path), device="cpu", compute_type="int8")
